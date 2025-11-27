@@ -7,4 +7,3 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "About | FP予約管理システム", full_title("About")
   end
 end
-

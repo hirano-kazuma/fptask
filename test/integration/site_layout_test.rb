@@ -1,20 +1,24 @@
 require "test_helper"
 
 class SiteLayoutTest < ActionDispatch::IntegrationTest
+  include ApplicationHelper
 
   test "layout links" do
     get root_path
     assert_template "static_pages/home"
+    # ロゴリンク(1) + ヘッダーナビ(1) = 2
     assert_select "a[href=?]", root_path, count: 2
-    assert_select "a[href=?]", help_path, count: 2
-    assert_select "a[href=?]", about_path, count: 2
+    # ヘッダーナビ(1) + フッター(1) + ホームページボタン(1) = 3
+    assert_select "a[href=?]", help_path, count: 3
+    # ヘッダーナビ(1) + フッター(1) + ホームページボタン(1) = 3
+    assert_select "a[href=?]", about_path, count: 3
   end
 
   test "header should have logo and navigation" do
     get root_path
     assert_select "header.navbar"
-    assert_select "a#logo img[src*='fptask_mark']"
-    assert_select "nav" do
+    assert_select "a#logo[href=?]", root_path
+    assert_select "ul.navbar-nav" do
       assert_select "a[href=?]", root_path, text: "Home"
       assert_select "a[href=?]", help_path, text: "Help"
       assert_select "a[href=?]", about_path, text: "About"
