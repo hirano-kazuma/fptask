@@ -1,0 +1,42 @@
+<% provide(:title, "Home") %>
+<div class="center jumbotron bg-light p-5 rounded">
+  <h1>FP予約管理システム</h1>
+  <h2>
+    ファイナンシャルプランナーとユーザーの予約を<br>
+    簡単に管理できるシステムです
+  </h2>
+
+  <div class="mt-4">
+    <%= link_to "ユーザー登録", "#", class: "btn btn-lg btn-primary me-2" %>
+    <%= link_to "FP登録", "#", class: "btn btn-lg btn-success" %>
+  </div>
+</div>
+
+<div class="row mt-5">
+  <div class="col-md-4">
+    <h3 class="text-center">簡単予約</h3>
+    <p class="text-center">
+      FPの空き状況を確認して、<br>
+      希望の時間帯を選んで予約できます
+    </p>
+  </div>
+  <div class="col-md-4">
+    <h3 class="text-center">柔軟な時間設定</h3>
+    <p class="text-center">
+      平日・土曜日の営業時間内で<br>
+      30分単位の予約が可能です
+    </p>
+  </div>
+  <div class="col-md-4">
+    <h3 class="text-center">安心のサポート</h3>
+    <p class="text-center">
+      予約の確認・キャンセルも<br>
+      マイページから簡単に行えます
+    </p>
+  </div>
+</div>
+
+<div class="mt-5 text-center">
+  <%= link_to "このアプリについて", about_path, class: "btn btn-outline-secondary me-2" %>
+  <%= link_to "ヘルプ", help_path, class: "btn btn-outline-secondary" %>
+</div>
