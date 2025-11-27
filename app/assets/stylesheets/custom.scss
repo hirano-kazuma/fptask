@@ -71,24 +71,23 @@ p {
 
 footer {
   margin-top: 45px;
-  padding-top: 5px;
+  padding-top: 20px;
+  padding-bottom: 20px;
   border-top: 1px solid #eaeaea;
   color: #777;
   a {
     color: #555;
     &:hover {
       color: #222;
+      text-decoration: none;
     }
   }
-  small {
-    float: left;
+  .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  ul {
-    float: right;
-    list-style: none;
-    li {
-      float: left;
-      margin-left: 15px;
-    }
+  .list-inline {
+    margin-bottom: 0;
   }
 }

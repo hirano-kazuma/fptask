@@ -11,34 +11,10 @@
     <%= javascript_importmap_tags %>
   </head>
   <body>
-    <header class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container">
-        <%= link_to root_path, id: "logo", class: "navbar-brand" do %>
-          <%= image_tag "fptask_mark.png", alt: "FP予約管理システム", class: "logo-image" %>
-        <% end %>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <%= link_to "Home", root_path, class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <%= link_to "Help", help_path, class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <%= link_to "About", about_path, class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <%= link_to "Log in", "#", class: "nav-link" %>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </header>
+    <%= render "layouts/header" %>
     <div class="container mt-4">
       <%= yield %>
     </div>
+    <%= render "layouts/footer" %>
   </body>
 </html>
