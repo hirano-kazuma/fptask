@@ -2,8 +2,12 @@ source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.1"
-# The modern asset pipeline for Rails [https://github.com/rails/propshaft]
-gem "propshaft"
+# Bootstrap for Rails [https://github.com/twbs/bootstrap-rubygem]
+gem "bootstrap", "~> 5.3.0"
+# Use Sass to process CSS
+gem "sassc-rails"
+# The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
+gem "sprockets-rails"
 # Use mysql as the database for Active Record
 gem "mysql2", "~> 0.5"
 # Use the Puma web server [https://github.com/puma/puma]
@@ -41,6 +45,8 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 group :development, :test do
+  # RSpec for testing [https://rspec.info/]
+  gem "rspec-rails", "~> 8.0.0"
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 
