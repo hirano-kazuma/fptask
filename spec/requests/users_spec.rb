@@ -15,14 +15,14 @@ RSpec.describe "Users", type: :request do
     end
   end
 
-  describe "GET /signup_fp" do
+  describe "GET /fp_signup" do
     it "returns http success" do
-      get signup_fp_path
+      get fp_signup_path
       expect(response).to have_http_status(:ok)
     end
 
     it "has correct title" do
-      get signup_fp_path
+      get fp_signup_path
       expect(response.body).to include("FP登録")
     end
   end
@@ -77,7 +77,7 @@ RSpec.describe "Users", type: :request do
     end
   end
 
-  describe "POST /users (FP registration)" do
+  describe "POST /fp_signup (FP registration)" do
     context "with valid parameters" do
       let(:valid_fp_params) do
         {
@@ -85,20 +85,19 @@ RSpec.describe "Users", type: :request do
             name: 'FP User',
             email: 'fp@example.com',
             password: 'password',
-            password_confirmation: 'password',
-            role: 'fp'
+            password_confirmation: 'password'
           }
         }
       end
 
       it "creates a new FP user" do
         expect {
-          post users_path, params: valid_fp_params
+          post fp_signup_path, params: valid_fp_params
         }.to change(User, :count).by(1)
       end
 
       it "creates user with fp role" do
-        post users_path, params: valid_fp_params
+        post fp_signup_path, params: valid_fp_params
         expect(User.last.role_fp?).to be true
       end
     end
