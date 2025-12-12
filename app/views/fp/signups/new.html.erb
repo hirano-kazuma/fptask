@@ -1,0 +1,16 @@
+<% provide(:title, "FP登録") %>
+<h1>FP登録</h1>
+
+<div class="row">
+  <div class="col-md-6 offset-md-3">
+    <%= render "shared/user_form",
+               user: @user,
+               url: fp_signup_path,
+               submit_text: "FPとして登録する",
+               button_class: "btn-success" %>
+
+    <p class="text-center mt-3">
+      一般ユーザーとして登録する場合は <%= link_to "こちら", new_signup_path %>
+    </p>
+  </div>
+</div>
