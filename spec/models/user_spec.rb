@@ -3,6 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
+  # shoulda-matchers 用に有効なユーザーインスタンスを定義
+  # validate_uniqueness_of などが内部でレコードを作成する際に必要
+  subject { User.new(name: 'Test User', email: 'test@example.com', password: 'password', role: :general) }
+
   # shoulda-matchers を使ったバリデーションテスト
   describe 'validations' do
     # name
@@ -12,7 +16,7 @@ RSpec.describe User, type: :model do
     # email
     it { is_expected.to validate_presence_of(:email) }
     it { is_expected.to validate_length_of(:email).is_at_most(255) }
-    it { is_expected.to validate_uniqueness_of(:email).case_insensitive }
+    it { is_expected.to validate_uniqueness_of(:email).ignoring_case_sensitivity }
 
     # password
     it { is_expected.to validate_length_of(:password).is_at_least(6) }
