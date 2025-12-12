@@ -69,27 +69,28 @@ RSpec.describe "Sessions", type: :request do
   end
 
   describe "DELETE /logout" do
-    before do
-      post login_path, params: { session: { email: user.email, password: 'password' } }
+    context "when logged in" do
+      before do
+        post login_path, params: { session: { email: user.email, password: 'password' } }
+      end
+
+      it "logs out the user and redirects to root" do
+        delete logout_path
+        expect(response).to redirect_to(root_url)
+      end
+
+      it "returns success after redirect" do
+        delete logout_path
+        follow_redirect!
+        expect(response).to have_http_status(:success)
+      end
     end
 
-    # 未ログイン状態でのログアウトテスト
-    context "when logged in" do
+    context "when not logged in" do
       it "redirects to root without error" do
         delete logout_path
         expect(response).to redirect_to(root_url)
       end
-    end
-
-    it "logs out the user" do
-      delete logout_path
-      expect(response).to redirect_to(root_url)
-    end
-
-    it "redirects to root" do
-      delete logout_path
-      follow_redirect!
-      expect(response).to have_http_status(:success)
     end
   end
 
