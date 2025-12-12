@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # 今後FP専用項目が増えることもあるので一般userと分けている
 module Fp
   class SignupsController < ApplicationController
