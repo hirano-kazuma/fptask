@@ -3,13 +3,13 @@ Rails.application.routes.draw do
   get "/help", to: "static_pages#help"
   get "/about", to: "static_pages#about"
 
-  # ユーザー登録
-  get "/signup", to: "users#new"
-  resources :users, only: %i[new create show]
+  # ユーザー登録（一般ユーザー）
+  resource :signup, only: %i[new create]
 
   # FP登録
-  get "/fp_signup", to: "users#new_fp"
-  post "/fp_signup", to: "users#create_fp"
+  namespace :fp do
+    resource :signup, only: %i[new create]
+  end
 
-  get "up" => "rails/health#show", as: :rails_health_check
+  resources :users, only: %i[show]
 end
