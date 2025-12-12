@@ -5,27 +5,27 @@ require 'rails_helper'
 RSpec.describe "Sessions", type: :request do
   let!(:user) { User.create!(name: 'Test User', email: 'test@example.com', password: 'password', role: :general) }
 
-  describe "GET /login" do
+  describe "GET /session/new" do
     it "returns http success" do
-      get login_path
+      get new_session_path
       expect(response).to have_http_status(:success)
     end
 
     it "has correct title" do
-      get login_path
+      get new_session_path
       expect(response.body).to include("ログイン")
     end
   end
 
-  describe "POST /login" do
+  describe "POST /session" do
     context "with valid credentials" do
       it "logs in the user" do
-        post login_path, params: { session: { email: user.email, password: 'password' } }
+        post session_path, params: { session: { email: user.email, password: 'password' } }
         expect(response).to redirect_to(user)
       end
 
       it "redirects to user profile" do
-        post login_path, params: { session: { email: user.email, password: 'password' } }
+        post session_path, params: { session: { email: user.email, password: 'password' } }
         follow_redirect!
         expect(response.body).to include(user.name)
       end
@@ -33,54 +33,54 @@ RSpec.describe "Sessions", type: :request do
 
     context "with invalid credentials" do
       it "does not log in with wrong password" do
-        post login_path, params: { session: { email: user.email, password: 'wrongpassword' } }
+        post session_path, params: { session: { email: user.email, password: 'wrongpassword' } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it "does not log in with wrong email" do
-        post login_path, params: { session: { email: 'wrong@example.com', password: 'password' } }
+        post session_path, params: { session: { email: 'wrong@example.com', password: 'password' } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it "shows error message" do
-        post login_path, params: { session: { email: user.email, password: 'wrongpassword' } }
+        post session_path, params: { session: { email: user.email, password: 'wrongpassword' } }
         expect(response.body).to include("メールアドレスまたはパスワードが間違っています")
       end
     end
 
     context "with case-insensitive email" do
       it "logs in with uppercase email" do
-        post login_path, params: { session: { email: 'TEST@EXAMPLE.COM', password: 'password' } }
+        post session_path, params: { session: { email: 'TEST@EXAMPLE.COM', password: 'password' } }
         expect(response).to redirect_to(user)
       end
     end
 
     context "with empty parameters" do
       it "does not log in with empty email" do
-        post login_path, params: { session: { email: '', password: 'password' } }
+        post session_path, params: { session: { email: '', password: 'password' } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it "does not log in with empty password" do
-        post login_path, params: { session: { email: user.email, password: '' } }
+        post session_path, params: { session: { email: user.email, password: '' } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end
 
-  describe "DELETE /logout" do
+  describe "DELETE /session" do
     context "when logged in" do
       before do
-        post login_path, params: { session: { email: user.email, password: 'password' } }
+        post session_path, params: { session: { email: user.email, password: 'password' } }
       end
 
       it "logs out the user and redirects to root" do
-        delete logout_path
+        delete session_path
         expect(response).to redirect_to(root_url)
       end
 
       it "returns success after redirect" do
-        delete logout_path
+        delete session_path
         follow_redirect!
         expect(response).to have_http_status(:success)
       end
@@ -88,7 +88,7 @@ RSpec.describe "Sessions", type: :request do
 
     context "when not logged in" do
       it "redirects to root without error" do
-        delete logout_path
+        delete session_path
         expect(response).to redirect_to(root_url)
       end
     end
@@ -105,7 +105,7 @@ RSpec.describe "Sessions", type: :request do
 
     context "when logged in" do
       before do
-        post login_path, params: { session: { email: user.email, password: 'password' } }
+        post session_path, params: { session: { email: user.email, password: 'password' } }
       end
 
       it "shows account dropdown" do

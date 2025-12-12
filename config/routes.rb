@@ -14,9 +14,7 @@ Rails.application.routes.draw do
   resources :users, only: %i[show]
 
   # セッション
-  get "/login", to: "sessions#new"
-  post "/login", to: "sessions#create"
-  delete "/logout", to: "sessions#destroy"
+  resource :session, only: %i[new create destroy]
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

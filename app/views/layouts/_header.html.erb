@@ -27,7 +27,7 @@
               <li><%= link_to "Settings", '#', class: "dropdown-item" %></li>
               <li><hr class="dropdown-divider"></li>
               <li>
-                <%= link_to "Log out", logout_path,
+                <%= link_to "Log out", session_path,
                     data: { "turbo-method": :delete },
                     class: "dropdown-item" %>
               </li>
@@ -35,7 +35,7 @@
           </li>
         <% else %>
           <li class="nav-item">
-            <%= link_to "Log in", login_path, class: "nav-link" %>
+            <%= link_to "Log in", new_session_path, class: "nav-link" %>
           </li>
         <% end %>
       </ul>
