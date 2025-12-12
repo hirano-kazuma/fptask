@@ -5,15 +5,15 @@
   <div class="col-md-6 offset-md-3">
     <%= form_with(url: login_path, scope: :session) do |f| %>
 
-      <%= f.label :email, "email" %>
+      <%= f.label :email, "メールアドレス", class: "form-label" %>
       <%= f.email_field :email, class: "form-control" %>
 
-      <%= f.label :password, "password" %>
+      <%= f.label :password, "パスワード", class: "form-label" %>
       <%= f.password_field :password, class: "form-control" %>
 
       <%= f.submit "ログイン", class: "btn btn-primary" %>
     <% end %>
 
-    <p>新規登録は <%= link_to "こちら", signup_path %></p>
+    <p>新規登録は <%= link_to "こちら", new_signup_path %></p>
   </div>
 </div>

@@ -54,11 +54,31 @@ RSpec.describe "Sessions", type: :request do
         expect(response).to redirect_to(user)
       end
     end
+
+    context "with empty parameters" do
+      it "does not log in with empty email" do
+        post login_path, params: { session: { email: '', password: 'password' } }
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it "does not log in with empty password" do
+        post login_path, params: { session: { email: user.email, password: '' } }
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
   end
 
   describe "DELETE /logout" do
     before do
       post login_path, params: { session: { email: user.email, password: 'password' } }
+    end
+
+    # 未ログイン状態でのログアウトテスト
+    context "when logged in" do
+      it "redirects to root without error" do
+        delete logout_path
+        expect(response).to redirect_to(root_url)
+      end
     end
 
     it "logs out the user" do
