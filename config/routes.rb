@@ -12,4 +12,9 @@ Rails.application.routes.draw do
   end
 
   resources :users, only: %i[show]
+
+  # セッション
+  resource :session, only: %i[new create destroy]
+
+  get "up" => "rails/health#show", as: :rails_health_check
 end
