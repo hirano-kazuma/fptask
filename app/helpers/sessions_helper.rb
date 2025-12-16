@@ -22,6 +22,7 @@ module SessionsHelper
     @current_user = nil
   end
 
+  # 渡されたユーザーが現在のユーザーであればtrueを返す
   def current_user?(user)
     user == current_user
   end
