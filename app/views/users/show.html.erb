@@ -1,0 +1,26 @@
+<% provide(:title, @user.name) %>
+<div class="row">
+  <aside class="col-md-4">
+    <section class="user_info">
+      <h1>
+        <%= gravatar_for @user %>
+        <%= @user.name %>
+      </h1>
+      <p>
+        <span class="badge <%= @user.role_fp? ? 'bg-success' : 'bg-primary' %>">
+          <%= @user.role_fp? ? 'FPユーザー' : '一般ユーザー' %>
+        </span>
+      </p>
+    </section>
+  </aside>
+  <div class="col-md-8">
+    <h2>プロフィール情報</h2>
+    <dl class="row">
+      <dt class="col-sm-3">メールアドレス</dt>
+      <dd class="col-sm-9"><%= @user.email %></dd>
+
+      <dt class="col-sm-3">登録日</dt>
+      <dd class="col-sm-9"><%= @user.created_at.strftime("%Y年%m月%d日") %></dd>
+    </dl>
+  </div>
+</div>
