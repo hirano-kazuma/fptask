@@ -24,6 +24,6 @@ module SessionsHelper
 
   # 渡されたユーザーが現在のユーザーであればtrueを返す
   def current_user?(user)
-    user == current_user
+    user && user == current_user
   end
 end
