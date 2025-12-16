@@ -11,7 +11,7 @@ Rails.application.routes.draw do
     resource :signup, only: %i[new create]
   end
 
-  resources :users, only: %i[show edit update]
+  resources :users, only: %i[show]
 
   # セッション
   resource :session, only: %i[new create destroy]
