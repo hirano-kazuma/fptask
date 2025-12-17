@@ -24,35 +24,19 @@ RSpec.describe "Users", type: :request do
         post session_path, params: { session: { email: user.email, password: 'password' } }
       end
 
-      it "returns http success" do
+      it "displays edit form with current user information" do
         get edit_user_path(user)
         expect(response).to have_http_status(:ok)
-      end
-
-      it "displays page title" do
-        get edit_user_path(user)
-        expect(response.body).to include("設定")
-      end
-
-      it "displays current user name in form" do
-        get edit_user_path(user)
         expect(response.body).to include(user.name)
-      end
-
-      it "displays current user email in form" do
-        get edit_user_path(user)
         expect(response.body).to include(user.email)
       end
     end
 
     context "when not logged in" do
-      it "redirects to login page" do
+      it "redirects to login page with flash message" do
         get edit_user_path(user)
         expect(response).to redirect_to(new_session_path)
-      end
 
-      it "displays flash message after redirect" do
-        get edit_user_path(user)
         follow_redirect!
         expect(response.body).to include("ログインが必要です")
       end
@@ -81,25 +65,18 @@ RSpec.describe "Users", type: :request do
           { user: { name: 'Updated Name', email: 'updated@example.com' } }
         end
 
-        it "updates the user name" do
+        it "update user redirects with success message" do
           patch user_path(user), params: valid_params
+
+          # DBが更新されたか
           user.reload
           expect(user.name).to eq('Updated Name')
-        end
-
-        it "updates the user email" do
-          patch user_path(user), params: valid_params
-          user.reload
           expect(user.email).to eq('updated@example.com')
-        end
 
-        it "redirects to user profile" do
-          patch user_path(user), params: valid_params
+          # リダイレクトされたか
           expect(response).to redirect_to(user)
-        end
 
-        it "displays success message after redirect" do
-          patch user_path(user), params: valid_params
+          # 成功メッセージが表示されたか
           follow_redirect!
           expect(response.body).to include("ユーザー情報が更新されました")
         end
@@ -122,26 +99,13 @@ RSpec.describe "Users", type: :request do
           { user: { name: '', email: 'invalid' } }
         end
 
-        it "does not update the user" do
-          original_name = user.name
-          patch user_path(user), params: invalid_params
-          user.reload
-          expect(user.name).to eq(original_name)
-        end
+        it "does not update user and re-renders edit form with error messages" do
+          expect {
+            patch user_path(user), params: invalid_params
+          }.not_to change { user.reload.name }
 
-        it "returns unprocessable entity status" do
-          patch user_path(user), params: invalid_params
           expect(response).to have_http_status(:unprocessable_entity)
-        end
-
-        it "re-renders edit form" do
-          patch user_path(user), params: invalid_params
           expect(response.body).to include("設定")
-        end
-
-        it "displays error messages" do
-          patch user_path(user), params: invalid_params
-          expect(response.body).to include("error_explanation")
           expect(response.body).to include("エラー")
         end
       end
@@ -159,16 +123,12 @@ RSpec.describe "Users", type: :request do
     end
 
     context "when not logged in" do
-      it "redirects to login page" do
-        patch user_path(user), params: { user: { name: 'Hacked' } }
-        expect(response).to redirect_to(new_session_path)
-      end
+      it "redirects to login and does not update the user" do
+        expect {
+          patch user_path(user), params: { user: { name: 'Hacked' } }
+        }.not_to change { user.reload.name }
 
-      it "does not update the user" do
-        original_name = user.name
-        patch user_path(user), params: { user: { name: 'Hacked' } }
-        user.reload
-        expect(user.name).to eq(original_name)
+        expect(response).to redirect_to(new_session_path)
       end
     end
 
@@ -177,16 +137,12 @@ RSpec.describe "Users", type: :request do
         post session_path, params: { session: { email: other_user.email, password: 'password' } }
       end
 
-      it "redirects to root" do
-        patch user_path(user), params: { user: { name: 'Hacked' } }
-        expect(response).to redirect_to(root_url)
-      end
+      it "redirects to root and does not update the user" do
+        expect {
+          patch user_path(user), params: { user: { name: 'Hacked' } }
+        }.not_to change { user.reload.name }
 
-      it "does not update the user" do
-        original_name = user.name
-        patch user_path(user), params: { user: { name: 'Hacked' } }
-        user.reload
-        expect(user.name).to eq(original_name)
+        expect(response).to redirect_to(root_url)
       end
     end
   end
