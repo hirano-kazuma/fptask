@@ -19,14 +19,12 @@
         </li>
         <% if logged_in? %>
           <% if current_user.role_fp? %>
-            <ul class="navbar-nav ms-auto">
-              <li class="nav-item">
-                <%= link_to "予約枠作成", new_time_slot_path, class: "nav-link" %>
-              </li>
-              <li class="nav-item">
-                <%= link_to "予約枠一覧", time_slots_path, class: "nav-link" %>
-              </li>
-            </ul>
+            <li class="nav-item">
+              <%= link_to "予約枠作成", new_time_slot_path, class: "nav-link" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "予約枠一覧", time_slots_path, class: "nav-link" %>
+            </li>
           <% end %>
           <li class="nav-item dropdown">
             <a href="#" id="account" class="nav-link dropdown-toggle">

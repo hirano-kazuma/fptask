@@ -7,11 +7,6 @@ RSpec.describe "TimeSlots", type: :request do
   let!(:general_user) { User.create!(name: 'General User', email: 'general@example.com', password: 'password', role: :general) }
   let!(:other_fp) { User.create!(name: 'Other FP', email: 'otherfp@example.com', password: 'password', role: :fp) }
 
-  # ログインヘルパー
-  def login_as(user)
-    post session_path, params: { session: { email: user.email, password: 'password' } }
-  end
-
   describe "GET /time_slots" do
     subject { get time_slots_path }
 

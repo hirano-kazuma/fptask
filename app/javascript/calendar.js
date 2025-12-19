@@ -1,4 +1,37 @@
 // カレンダー機能
+// 定数定義
+const SATURDAY = 6; // 土曜日の曜日番号
+
+// タイムゾーン処理ユーティリティ
+const TimeZoneUtils = {
+  // UTC時間の文字列から日付部分を抽出（タイムゾーンの影響を避ける）
+  extractDateFromUTCString: (utcString) => {
+    const cleaned = utcString.replace('.000Z', '').replace('Z', '');
+    const dateMatch = cleaned.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateMatch) {
+      const [, year, month, day] = dateMatch;
+      return { year: parseInt(year), month: parseInt(month), day: parseInt(day) };
+    }
+    return null;
+  },
+
+  // UTC時間の文字列から時刻部分を抽出
+  extractTimeFromUTCString: (utcString) => {
+    const cleaned = utcString.replace('.000Z', '').replace('Z', '');
+    const timeMatch = cleaned.match(/T(\d{2}):(\d{2}):/);
+    if (timeMatch) {
+      const [, hour, minute] = timeMatch;
+      return { hour: parseInt(hour), minute: parseInt(minute) };
+    }
+    return null;
+  },
+
+  // UTC時間文字列を比較用の文字列に変換
+  normalizeUTCString: (utcString) => {
+    return utcString.replace('.000Z', '').replace('Z', '');
+  }
+};
+
 function initCalendar() {
   const calendarContainer = document.getElementById('calendar-container');
   if (!calendarContainer) return;
@@ -63,14 +96,11 @@ function initCalendar() {
     selectedDate = new Date(year, month - 1, day);
   } else if (isEditMode && editingTimeSlot.start_time) {
     // 編集モードの場合、編集対象の日付を初期選択
-    // UTC時間の文字列から日付部分を直接抽出（タイムゾーンの影響を避ける）
-    const slotTimeStr = editingTimeSlot.start_time.replace('.000Z', '').replace('Z', '');
-    const dateMatch = slotTimeStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (dateMatch) {
-      const [, year, month, day] = dateMatch;
-      currentYear = parseInt(year);
-      currentMonth = parseInt(month) - 1;
-      selectedDate = new Date(currentYear, currentMonth, parseInt(day));
+    const dateInfo = TimeZoneUtils.extractDateFromUTCString(editingTimeSlot.start_time);
+    if (dateInfo) {
+      currentYear = dateInfo.year;
+      currentMonth = dateInfo.month - 1;
+      selectedDate = new Date(currentYear, currentMonth, dateInfo.day);
     }
   }
 
@@ -105,13 +135,11 @@ function initCalendar() {
         hiddenEndTime.value = formatDateTime(endDate);
 
         // 編集対象の時間枠をハイライト
-        const editingSlotTimeStr = editingTimeSlot.start_time.replace('.000Z', '').replace('Z', '');
-        const timeMatch = editingSlotTimeStr.match(/T(\d{2}):(\d{2}):/);
-        if (timeMatch) {
-          const [, hour, minute] = timeMatch;
+        const timeInfo = TimeZoneUtils.extractTimeFromUTCString(editingTimeSlot.start_time);
+        if (timeInfo) {
           const timeBtn = Array.from(document.querySelectorAll('.time-slot-btn')).find(btn => {
             const btnTime = btn.textContent.match(/(\d{2}):(\d{2})/);
-            return btnTime && btnTime[1] === hour && btnTime[2] === minute;
+            return btnTime && btnTime[1] === String(timeInfo.hour).padStart(2, '0') && btnTime[2] === String(timeInfo.minute).padStart(2, '0');
           });
           if (timeBtn) {
             timeBtn.classList.add('active');
@@ -223,7 +251,7 @@ function initCalendar() {
     selectedDateHeader.textContent = dateStr;
 
     let startHour, endHour;
-    if (dayOfWeek === 6) {
+    if (dayOfWeek === SATURDAY) {
       startHour = 11;
       endHour = 15;
     } else {
@@ -248,15 +276,15 @@ function initCalendar() {
 
         // 既存の予約枠を検索（IDも含める）
         const existingSlot = existingSlots.find(slot => {
-          const slotTimeStr = slot.start_time.replace('.000Z', '').replace('Z', '');
-          return slotTimeStr === checkTimeStr;
+          const normalizedSlotTime = TimeZoneUtils.normalizeUTCString(slot.start_time);
+          return normalizedSlotTime === checkTimeStr;
         });
         const isExisting = !!existingSlot;
 
         // 編集対象の枠かどうかを判定
         const isEditingSlot = isEditMode && editingTimeSlot.start_time && (() => {
-          const editingSlotTimeStr = editingTimeSlot.start_time.replace('.000Z', '').replace('Z', '');
-          return editingSlotTimeStr === checkTimeStr;
+          const normalizedEditingTime = TimeZoneUtils.normalizeUTCString(editingTimeSlot.start_time);
+          return normalizedEditingTime === checkTimeStr;
         })();
 
         const btn = document.createElement('button');
@@ -313,8 +341,7 @@ function initCalendar() {
                     } else {
                       alert('削除に失敗しました');
                     }
-                  }).catch(error => {
-                    console.error('Error:', error);
+                  }).catch(() => {
                     alert('削除中にエラーが発生しました');
                   });
                 }
