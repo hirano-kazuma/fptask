@@ -4,10 +4,10 @@ class TimeSlot < ApplicationRecord
   belongs_to :fp, class_name: "User"
 
   # 営業時間設定
-  WEEKDAY_START_HOUR = 10
-  WEEKDAY_END_HOUR = 18
-  SATURDAY_START_HOUR = 11
-  SATURDAY_END_HOUR = 15
+  WEEKDAY_START_HOUR = 10 # 平日の開始時間
+  WEEKDAY_END_HOUR = 18 # 平日の終了時間
+  SATURDAY_START_HOUR = 11 # 土曜日の開始時間
+  SATURDAY_END_HOUR = 15 # 土曜日の終了時間
 
   # エラーメッセージ定数
   DUPLICATE_TIME_SLOT_MESSAGE = "この時間帯は既に登録されています"
