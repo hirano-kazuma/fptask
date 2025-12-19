@@ -1,0 +1,6 @@
+<% provide(:title, "予約枠編集") %>
+<h1>予約枠編集</h1>
+
+<%= render "calendar", existing_slots: @existing_slots, editing_time_slot: @time_slot %>
+
+<%= link_to "一覧に戻る", time_slots_path, class: "btn btn-outline-secondary mt-3" %>

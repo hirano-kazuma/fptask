@@ -1,0 +1,23 @@
+<% provide(:title, "予約枠詳細") %>
+<h1>予約枠詳細</h1>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <dl class="row">
+      <dt class="col-sm-3">開始時間</dt>
+      <dd class="col-sm-9"><%= @time_slot.start_time.strftime("%Y年%m月%d日 %H:%M") %></dd>
+
+      <dt class="col-sm-3">終了時間</dt>
+      <dd class="col-sm-9"><%= @time_slot.end_time.strftime("%H:%M") %></dd>
+
+      <dt class="col-sm-3">曜日</dt>
+      <dd class="col-sm-9"><%= %w[日 月 火 水 木 金 土][@time_slot.start_time.wday] %>曜日</dd>
+    </dl>
+  </div>
+</div>
+
+<%= link_to "編集", edit_time_slot_path(@time_slot), class: "btn btn-secondary" %>
+<%= link_to "削除", time_slot_path(@time_slot),
+    data: { turbo_method: :delete, turbo_confirm: "本当に削除しますか？" },
+    class: "btn btn-danger" %>
+<%= link_to "一覧に戻る", time_slots_path, class: "btn btn-outline-secondary" %>

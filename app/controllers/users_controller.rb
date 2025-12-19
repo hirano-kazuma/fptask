@@ -4,9 +4,16 @@ class UsersController < ApplicationController
   before_action :logged_in_user, only: %i[edit update]
   before_action :correct_user, only: %i[edit update]
 
-  # ユーザー詳細
   def show
-    @user = User.find(params[:id])
+    if logged_in? && current_user.id == params[:id].to_i
+      @user = current_user
+      return
+    end
+
+    # それ以外はFPのみ検索
+    @user = User.where(role: :fp).find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      redirect_to root_url, alert: "このページは閲覧できません"
   end
 
   def edit
@@ -26,13 +33,6 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(:name, :email, :password, :password_confirmation)
-  end
-
-  def logged_in_user
-    unless logged_in?
-      flash[:danger] = "ログインが必要です"
-      redirect_to new_session_path
-    end
   end
 
   def correct_user

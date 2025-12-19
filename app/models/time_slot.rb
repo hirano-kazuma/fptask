@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 class TimeSlot < ApplicationRecord
-  belongs_to :fp, class_name: 'User'
-  has_one :booking
+  belongs_to :fp, class_name: "User"
 
   validates :start_time, presence: true
   validates :end_time, presence: true
@@ -10,11 +9,6 @@ class TimeSlot < ApplicationRecord
   validate :valid_day_of_week
   validate :valid_time_range
   validate :no_overlapping_slots
-
-  # 予約済みかどうか
-  def reserved?
-    booking.present? && !booking.cancelled?
-  end
 
   private
 

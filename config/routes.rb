@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   root "static_pages#home"
+
   get "/help", to: "static_pages#help"
   get "/about", to: "static_pages#about"
 
@@ -15,6 +16,9 @@ Rails.application.routes.draw do
 
   # セッション
   resource :session, only: %i[new create destroy]
+
+  # 予約枠（FP用）
+  resources :time_slots
 
   get "up" => "rails/health#show", as: :rails_health_check
 end
