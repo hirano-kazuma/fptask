@@ -12,8 +12,9 @@ class UsersController < ApplicationController
 
     # それ以外はFPのみ検索
     @user = User.where(role: :fp).find(params[:id])
-    rescue ActiveRecord::RecordNotFound
-      redirect_to root_url, alert: "このページは閲覧できません"
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = "このページは閲覧できません"
+    redirect_back(fallback_location: root_path)
   end
 
   def edit

@@ -3,9 +3,9 @@
 require 'rails_helper'
 
 RSpec.describe "TimeSlots", type: :request do
-  let!(:fp_user) { User.create!(name: 'FP User', email: 'fp@example.com', password: 'password', role: :fp) }
-  let!(:general_user) { User.create!(name: 'General User', email: 'general@example.com', password: 'password', role: :general) }
-  let!(:other_fp) { User.create!(name: 'Other FP', email: 'otherfp@example.com', password: 'password', role: :fp) }
+  let!(:fp_user) { create(:user, :fp) }
+  let!(:general_user) { create(:user, :general) }
+  let!(:other_fp) { create(:user, :fp) }
 
   describe "GET /time_slots" do
     subject { get time_slots_path }
@@ -30,9 +30,11 @@ RSpec.describe "TimeSlots", type: :request do
     context "when logged in as general user" do
       before { login_as(general_user) }
 
-      it "redirects to root" do
+      it "returns http success (general users can access index to view available slots)" do
         subject
-        expect(response).to redirect_to(root_url)
+        # 一般ユーザーもindexアクションにアクセス可能（予約可能な枠一覧を表示するため）
+        # ただし、current_user.time_slotsは空の配列を返す
+        expect(response).to have_http_status(:success)
       end
     end
   end
@@ -119,13 +121,7 @@ RSpec.describe "TimeSlots", type: :request do
   end
 
   describe "GET /time_slots/:id" do
-    let!(:time_slot) do
-      TimeSlot.create!(
-        fp: fp_user,
-        start_time: Time.zone.parse("2025-12-15 10:00"),
-        end_time: Time.zone.parse("2025-12-15 10:30")
-      )
-    end
+    let!(:time_slot) { create(:time_slot, fp: fp_user) }
 
     subject { get time_slot_path(time_slot) }
 
@@ -168,13 +164,7 @@ RSpec.describe "TimeSlots", type: :request do
   end
 
   describe "GET /time_slots/:id/edit" do
-    let!(:time_slot) do
-      TimeSlot.create!(
-        fp: fp_user,
-        start_time: Time.zone.parse("2025-12-15 10:00"),
-        end_time: Time.zone.parse("2025-12-15 10:30")
-      )
-    end
+    let!(:time_slot) { create(:time_slot, fp: fp_user) }
 
     subject { get edit_time_slot_path(time_slot) }
 
@@ -217,13 +207,7 @@ RSpec.describe "TimeSlots", type: :request do
   end
 
   describe "PATCH /time_slots/:id" do
-    let!(:time_slot) do
-      TimeSlot.create!(
-        fp: fp_user,
-        start_time: Time.zone.parse("2025-12-15 10:00"),
-        end_time: Time.zone.parse("2025-12-15 10:30")
-      )
-    end
+    let!(:time_slot) { create(:time_slot, fp: fp_user) }
 
     let(:params) { update_params }
     subject { patch time_slot_path(time_slot), params: params }
@@ -244,7 +228,8 @@ RSpec.describe "TimeSlots", type: :request do
         it "updates the time slot, redirects, and displays success message" do
           subject
           time_slot.reload
-          expect(time_slot.start_time.hour).to eq(11)
+          expect(time_slot.start_time).to eq(Time.zone.parse("2025-12-15 11:00"))
+          expect(time_slot.end_time).to eq(Time.zone.parse("2025-12-15 11:30"))
           expect(response).to redirect_to(time_slot_path(time_slot))
           follow_redirect!
           expect(response.body).to include("予約枠を更新しました")
@@ -297,13 +282,7 @@ RSpec.describe "TimeSlots", type: :request do
   end
 
   describe "DELETE /time_slots/:id" do
-    let!(:time_slot) do
-      TimeSlot.create!(
-        fp: fp_user,
-        start_time: Time.zone.parse("2025-12-15 10:00"),
-        end_time: Time.zone.parse("2025-12-15 10:30")
-      )
-    end
+    let!(:time_slot) { create(:time_slot, fp: fp_user) }
 
     subject { delete time_slot_path(time_slot) }
 
