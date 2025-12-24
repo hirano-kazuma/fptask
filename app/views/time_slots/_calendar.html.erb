@@ -34,8 +34,8 @@
       <div class="card mt-3">
         <div class="card-header">営業時間</div>
         <div class="card-body">
-          <p class="mb-1"><strong>平日:</strong> <%= sprintf("%02d:00", TimeSlot::WEEKDAY_START_HOUR) %>〜<%= sprintf("%02d:00", TimeSlot::WEEKDAY_END_HOUR) %></p>
-          <p class="mb-1"><strong>土曜:</strong> <%= sprintf("%02d:00", TimeSlot::SATURDAY_START_HOUR) %>〜<%= sprintf("%02d:00", TimeSlot::SATURDAY_END_HOUR) %></p>
+          <p class="mb-1"><strong>平日:</strong> <%= sprintf("%02d:00", TimeRangeValidator::WEEKDAY_START_HOUR) %>〜<%= sprintf("%02d:00", TimeRangeValidator::WEEKDAY_END_HOUR) %></p>
+          <p class="mb-1"><strong>土曜:</strong> <%= sprintf("%02d:00", TimeRangeValidator::SATURDAY_START_HOUR) %>〜<%= sprintf("%02d:00", TimeRangeValidator::SATURDAY_END_HOUR) %></p>
           <p class="mb-1"><strong>日曜:</strong> 休業日</p>
           <hr>
           <% unless view_mode %>

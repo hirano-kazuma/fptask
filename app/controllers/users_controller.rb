@@ -18,11 +18,11 @@ class UsersController < ApplicationController
   end
 
   def edit
-    @user = User.find(params[:id])
+    # @userはcorrect_userで設定済み
   end
 
   def update
-    @user = User.find(params[:id])
+    # @userはcorrect_userで設定済み
     if @user.update(user_params)
       redirect_to @user, notice: "ユーザー情報が更新されました"
     else
