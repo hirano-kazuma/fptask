@@ -335,7 +335,7 @@ RSpec.describe "Bookings", type: :request do
       it "does not update booking status and redirects with alert" do
         expect { subject }.not_to change { booking.reload.status }
         expect(response).to redirect_to(bookings_path)
-        expect(flash[:alert]).to include("この予約を操作する権限がありません")
+        expect(flash[:alert]).to include("予約が見つかりません")
       end
     end
 
