@@ -44,6 +44,9 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 
+# View decorator for Rails [https://github.com/amatsuda/active_decorator]
+gem "active_decorator"
+
 group :development, :test do
   # RSpec for testing [https://rspec.info/]
   gem "rspec-rails", "~> 8.0.0"
@@ -70,4 +73,6 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem "shoulda-matchers", "~> 6.0"
+  # FactoryBot for test data generation [https://github.com/thoughtbot/factory_bot_rails]
+  gem "factory_bot_rails"
 end

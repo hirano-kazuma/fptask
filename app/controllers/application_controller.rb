@@ -19,11 +19,16 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  # FPユーザーかどうかを確認
-  def fp_user
-    unless current_user&.role_fp?
-      flash[:danger] = "FPユーザーではありません"
-      redirect_to root_url
-    end
+  # FPユーザーかどうかを判定（真偽値を返す）
+  def fp_user?
+    current_user&.role_fp?
+  end
+
+  # FPユーザーでない場合にリダイレクト
+  def redirect_if_not_fp
+    return if fp_user?
+
+    flash[:danger] = "FPユーザーではありません"
+    redirect_to root_url
   end
 end
