@@ -1,0 +1,56 @@
+<% provide(:title, "予約詳細") %>
+<h1>予約詳細</h1>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <dl class="row">
+      <dt class="col-sm-3">予約日時</dt>
+      <dd class="col-sm-9"><%= booking_time_range(@booking) %></dd>
+
+      <% if current_user.role_fp? %>
+        <dt class="col-sm-3">予約者</dt>
+        <dd class="col-sm-9"><%= @booking.user.name %></dd>
+        <dt class="col-sm-3">予約者メール</dt>
+        <dd class="col-sm-9"><%= @booking.user.email %></dd>
+      <% else %>
+        <dt class="col-sm-3">FP</dt>
+        <dd class="col-sm-9"><%= @booking.time_slot.fp.name %></dd>
+      <% end %>
+
+      <dt class="col-sm-3">ステータス</dt>
+      <dd class="col-sm-9">
+        <%= booking_status_badge(@booking) %>
+      </dd>
+
+      <dt class="col-sm-3">予約内容</dt>
+      <dd class="col-sm-9">
+        <div class="border p-3 bg-light rounded">
+          <%= simple_format(@booking.description) %>
+        </div>
+      </dd>
+
+      <dt class="col-sm-3">申請日時</dt>
+      <dd class="col-sm-9"><%= @booking.created_at.strftime("%Y年%m月%d日 %H:%M") %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="mb-3">
+  <% if current_user.role_fp? %>
+    <% if @booking.status_pending? %>
+      <%= link_to "承認", confirm_booking_path(@booking),
+          data: { turbo_method: :patch, turbo_confirm: "この予約を承認しますか？" },
+          class: "btn btn-success" %>
+      <%= link_to "拒否", reject_booking_path(@booking),
+          data: { turbo_method: :patch, turbo_confirm: "この予約を拒否しますか？" },
+          class: "btn btn-danger" %>
+    <% end %>
+  <% else %>
+    <% if @booking.status_confirmed? || @booking.status_pending? %>
+      <%= link_to "キャンセル", booking_path(@booking),
+          data: { turbo_method: :delete, turbo_confirm: "予約をキャンセルしますか？" },
+          class: "btn btn-danger" %>
+    <% end %>
+  <% end %>
+  <%= link_to "予約一覧に戻る", bookings_path, class: "btn btn-outline-secondary" %>
+</div>

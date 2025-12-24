@@ -10,14 +10,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_16_101844) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_23_041833) do
+  create_table "bookings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description", null: false
+    t.integer "status", default: 0, null: false
+    t.bigint "time_slot_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["time_slot_id"], name: "index_bookings_on_time_slot_id", unique: true
+    t.index ["user_id"], name: "index_bookings_on_user_id"
+  end
+
   create_table "time_slots", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "end_time", null: false
     t.bigint "fp_id", null: false
     t.datetime "start_time", null: false
     t.datetime "updated_at", null: false
-    t.index ["fp_id", "start_time"], name: "index_time_slots_on_fp_id_and_start_time", unique: true
     t.index ["fp_id"], name: "index_time_slots_on_fp_id"
     t.check_constraint "`end_time` > `start_time`", name: "check_end_time_after_start_time"
     t.check_constraint "minute(`end_time`) in (0,30)", name: "check_end_time_minutes"
@@ -34,5 +44,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_16_101844) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "bookings", "time_slots"
+  add_foreign_key "bookings", "users"
   add_foreign_key "time_slots", "users", column: "fp_id"
 end

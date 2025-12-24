@@ -1,11 +1,26 @@
 class TimeSlotsController < ApplicationController
   before_action :logged_in_user
-  before_action :fp_user
+  before_action :fp_user, except: [:index]
   before_action :set_time_slot, only: %i[show edit update destroy]
   before_action :set_existing_slots, only: %i[index new create edit update]
 
   def index
-    @time_slots = current_user.time_slots.order(:start_time)
+    if current_user.role_fp?
+      # FP用：自分の予約枠一覧
+      @time_slots = current_user.time_slots.order(:start_time)
+    else
+      # 一般ユーザー用：予約可能な枠一覧（未来の枠のみ）
+      @fps = User.where(role: :fp).order(:name)
+      selected_fp_id = params[:fp_id]&.to_i
+
+      @time_slots = TimeSlot.includes(:bookings, :fp)
+                            .future
+                            .by_fp(selected_fp_id)
+                            .order(:start_time)
+
+      @selected_fp = @fps.find_by(id: selected_fp_id) if selected_fp_id
+      @available_slots = @time_slots.map(&:to_available_hash)
+    end
   end
 
   def show
@@ -38,8 +53,11 @@ class TimeSlotsController < ApplicationController
   end
 
   def destroy
-    @time_slot.destroy
-    redirect_to time_slots_path, notice: "予約枠を削除しました", status: :see_other
+    if @time_slot.destroy
+      redirect_to time_slots_path, notice: "予約枠を削除しました", status: :see_other
+    else
+      redirect_to time_slots_path, alert: @time_slot.errors.full_messages.join(", "), status: :see_other
+    end
   end
 
   private
@@ -51,6 +69,8 @@ class TimeSlotsController < ApplicationController
   end
 
   def set_existing_slots
+    return unless current_user.role_fp?
+
     base_scope = current_user.time_slots.select(:id, :start_time, :end_time)
     @existing_slots = @time_slot ? base_scope.where.not(id: @time_slot.id) : base_scope
   end

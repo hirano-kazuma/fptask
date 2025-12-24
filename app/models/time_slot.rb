@@ -3,6 +3,8 @@
 class TimeSlot < ApplicationRecord
   belongs_to :fp, class_name: "User"
 
+  has_many :bookings, dependent: :restrict_with_error
+
   # 営業時間設定
   WEEKDAY_START_HOUR = 10 # 平日の開始時間
   WEEKDAY_END_HOUR = 18 # 平日の終了時間
@@ -18,6 +20,29 @@ class TimeSlot < ApplicationRecord
   validate :valid_day_of_week
   validate :valid_time_range
   validate :no_overlapping_slots
+
+  before_destroy :check_active_bookings
+
+  # スコープ
+  scope :future, -> { where("start_time >= ?", Time.current) }
+  scope :by_fp, ->(fp_id) { where(fp_id: fp_id) if fp_id.present? }
+
+  # 予約可能かどうかを判定
+  def available?
+    bookings.where.not(status: [:cancelled, :rejected, :completed]).empty?
+  end
+
+  # 予約可能な枠の情報をハッシュで返す
+  def to_available_hash
+    {
+      id: id,
+      start_time: start_time,
+      end_time: end_time,
+      fp_id: fp_id,
+      fp_name: fp.name,
+      available: available?
+    }
+  end
 
   private
 
@@ -60,6 +85,18 @@ class TimeSlot < ApplicationRecord
 
     if overlapping.exists?
       errors.add(:base, DUPLICATE_TIME_SLOT_MESSAGE)
+    end
+  end
+
+  # 承認済みまたは承認待ちの予約がある場合は削除を防ぐ
+  def check_active_bookings
+    # 承認済み、承認待ち、完了の予約をチェック
+    # reloadして最新の状態を取得（キャッシュを回避）
+    active_bookings = Booking.where(time_slot_id: id)
+                             .where(status: [:pending, :confirmed, :completed])
+    if active_bookings.exists?
+      errors.add(:base, "承認済みまたは承認待ちの予約があるため削除できません")
+      throw :abort
     end
   end
 end

@@ -16,4 +16,5 @@ class User < ApplicationRecord
   has_secure_password
 
   has_many :time_slots, foreign_key: "fp_id", dependent: :destroy
+  has_many :bookings, dependent: :destroy
 end

@@ -1,6 +1,42 @@
-<% provide(:title, "予約枠一覧") %>
-<h1>予約枠一覧</h1>
+<% if current_user.role_fp? %>
+  <% provide(:title, "予約枠一覧") %>
+  <h1>予約枠一覧</h1>
 
-<%= link_to "新規作成", new_time_slot_path, class: "btn btn-primary mb-3" %>
+  <%= link_to "新規作成", new_time_slot_path, class: "btn btn-primary mb-3" %>
 
-<%= render "calendar", existing_slots: @existing_slots, view_mode: true, editing_time_slot: nil %>
+  <%= render "calendar", existing_slots: @existing_slots, view_mode: true, editing_time_slot: nil %>
+<% else %>
+  <% provide(:title, "予約可能な枠一覧") %>
+  <h1>予約可能な枠一覧</h1>
+
+  <div class="mb-4">
+    <label for="fp-select" class="form-label"><strong>FPを選択</strong></label>
+    <%= form_with url: time_slots_path, method: :get, local: true, id: "fp-select-form" do |f| %>
+      <%= f.select :fp_id,
+          options_from_collection_for_select(@fps, :id, :name, params[:fp_id]),
+          { include_blank: "全てのFP" },
+          { id: "fp-select", class: "form-select", onchange: "this.form.submit()" } %>
+    <% end %>
+  </div>
+
+  <% if @selected_fp %>
+    <div class="alert alert-info">
+      <strong><%= @selected_fp.name %></strong> の予約枠を表示しています
+    </div>
+  <% end %>
+
+  <%# 既存のカレンダーパーシャルを使用（予約モード用にデータを整形） %>
+  <% existing_slots_for_calendar = @available_slots.map { |slot| { id: slot[:id], start_time: slot[:start_time], end_time: slot[:end_time], available: slot[:available], fp_id: slot[:fp_id], fp_name: slot[:fp_name] } } %>
+  <%= render "calendar", existing_slots: existing_slots_for_calendar, view_mode: true, booking_mode: true %>
+
+  <div class="card mt-3">
+    <div class="card-header">凡例</div>
+    <div class="card-body">
+      <p class="mb-1"><span class="badge bg-success">◯ 10:00</span> 予約可能</p>
+      <p class="mb-1"><span class="badge bg-danger">× 10:00</span> 予約不可</p>
+      <p class="mb-0"><span class="badge bg-secondary">- 10:00</span> 予約枠なし</p>
+    </div>
+  </div>
+
+  <%= link_to "予約一覧に戻る", bookings_path, class: "btn btn-outline-secondary mt-3" %>
+<% end %>
