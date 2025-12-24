@@ -28,7 +28,7 @@ class ApplicationController < ActionController::Base
   def redirect_if_not_fp
     return if fp_user?
 
-    flash[:danger] = "FPユーザーではありません"
-    redirect_to root_url
+      flash[:danger] = "FPユーザーではありません"
+      redirect_to root_url
   end
 end

@@ -20,6 +20,9 @@ class Booking < ApplicationRecord
   validates :description, presence: true
   validate :no_duplicate_booking_for_time_slot
 
+  scope :active, -> { where.not(status: [:cancelled, :rejected, :completed]) }
+  scope :cancellable, -> { where(status: [:pending, :confirmed]) }
+
   # 確定済みの予約がend_timeを過ぎたら自動でcompletedに更新
   def update_to_completed_if_past
     return unless status_confirmed?
@@ -28,18 +31,19 @@ class Booking < ApplicationRecord
     update(status: :completed)
   end
 
+  # キャンセル可能かどうかを判定
+  def status_cancellable?
+    status_pending? || status_confirmed?
+  end
+
   private
 
   # 同じTimeSlotへの重複予約を防ぐ（キャンセル済み・拒否済み・完了済みは除く）
   def no_duplicate_booking_for_time_slot
     return if time_slot_id.blank?
 
-    existing_booking = Booking.where(time_slot_id: time_slot_id)
-                              .where.not(id: id)
-                              .where.not(status: [:cancelled, :rejected, :completed])
+    return unless Booking.active.where(time_slot_id: time_slot_id).where.not(id: id).exists?
 
-    if existing_booking.exists?
-      errors.add(:base, DUPLICATE_BOOKING_MESSAGE)
-    end
+    errors.add(:base, DUPLICATE_BOOKING_MESSAGE)
   end
 end

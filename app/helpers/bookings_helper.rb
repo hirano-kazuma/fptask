@@ -21,4 +21,36 @@ module BookingsHelper
     end_time = booking.time_slot.end_time.strftime("%H:%M")
     "#{start_time} - #{end_time}"
   end
+
+  # 予約詳細ページのアクションボタンを返す
+  def booking_action_buttons(booking)
+    if current_user.role_fp?
+      fp_action_buttons(booking)
+    else
+      general_user_action_buttons(booking)
+    end
+  end
+
+  private
+
+  def fp_action_buttons(booking)
+    return unless booking.status_pending?
+
+    safe_join([
+      link_to("承認", confirm_booking_path(booking),
+              data: { turbo_method: :patch, turbo_confirm: "この予約を承認しますか？" },
+              class: "btn btn-success"),
+      link_to("拒否", reject_booking_path(booking),
+              data: { turbo_method: :patch, turbo_confirm: "この予約を拒否しますか？" },
+              class: "btn btn-danger")
+    ])
+  end
+
+  def general_user_action_buttons(booking)
+    return unless booking.status_cancellable?
+
+    link_to("キャンセル", booking_path(booking),
+            data: { turbo_method: :delete, turbo_confirm: "予約をキャンセルしますか？" },
+            class: "btn btn-danger")
+  end
 end

@@ -1,63 +1,25 @@
 class BookingsController < ApplicationController
   before_action :logged_in_user
-  before_action :set_booking, only: %i[show destroy confirm reject]
 
   def index
-    if current_user.role_fp?
-      # FP用：自分のTimeSlotに対する予約一覧
-      @bookings = Booking.joins(:time_slot)
-                         .where(time_slots: { fp_id: current_user.id })
-                         .includes(:time_slot, :user)
-                         .order(created_at: :desc)
-      # 確定済みの予約がend_timeを過ぎていたら自動でcompletedに更新
-      @bookings.each(&:update_to_completed_if_past)
-    else
-      # 一般ユーザー用：自分の予約一覧
-      @bookings = current_user.bookings.includes(:time_slot, :time_slot => :fp).order(created_at: :desc)
-      # 確定済みの予約がend_timeを過ぎていたら自動でcompletedに更新
-      @bookings.each(&:update_to_completed_if_past)
-    end
+    @bookings = load_bookings_for_current_user
+    update_completed_bookings(@bookings)
   end
 
   def show
-    # 確定済みの予約がend_timeを過ぎていたら自動でcompletedに更新
+    set_booking
+    return if performed?
     @booking.update_to_completed_if_past
   end
 
   def new
-    @time_slot = TimeSlot.find(params[:time_slot_id])
-
-    # 過去の予約枠への予約申請を防ぐ
-    if @time_slot.start_time < Time.current
-      redirect_to time_slots_path, alert: "過去の予約枠には予約できません", status: :see_other
-      return
-    end
-
-    # 予約可能かどうかをチェック
-    unless @time_slot.available?
-      redirect_to time_slots_path, alert: "この予約枠は既に予約されています", status: :see_other
-      return
-    end
+    return unless validate_time_slot_for_booking
 
     @booking = current_user.bookings.build(time_slot: @time_slot)
-  rescue ActiveRecord::RecordNotFound
-    redirect_to time_slots_path, alert: "予約枠が見つかりません", status: :see_other
   end
 
   def create
-    @time_slot = TimeSlot.find(params[:time_slot_id])
-
-    # 過去の予約枠への予約申請を防ぐ
-    if @time_slot.start_time < Time.current
-      redirect_to time_slots_path, alert: "過去の予約枠には予約できません", status: :see_other
-      return
-    end
-
-    # 予約可能かどうかをチェック
-    unless @time_slot.available?
-      redirect_to time_slots_path, alert: "この予約枠は既に予約されています", status: :see_other
-      return
-    end
+    return unless validate_time_slot_for_booking
 
     @booking = current_user.bookings.build(booking_params.merge(time_slot: @time_slot))
     if @booking.save
@@ -65,13 +27,13 @@ class BookingsController < ApplicationController
     else
       render :new, status: :unprocessable_entity
     end
-  rescue ActiveRecord::RecordNotFound
-    redirect_to root_path, alert: "予約枠が見つかりません", status: :see_other
   end
 
   def destroy
-    # 一般ユーザーは確定済み（confirmed）と承認待ち（pending）のみキャンセル可能
-    unless @booking.status_confirmed? || @booking.status_pending?
+    set_booking
+    return if performed?
+
+    unless @booking.status_cancellable?
       redirect_to bookings_path, alert: "完了済みの予約はキャンセルできません", status: :see_other
       return
     end
@@ -82,6 +44,8 @@ class BookingsController < ApplicationController
 
   # FP用：予約を承認
   def confirm
+    set_booking
+    return if performed?
     return unless can_modify_booking?("承認")
 
     if @booking.update(status: :confirmed)
@@ -93,6 +57,8 @@ class BookingsController < ApplicationController
 
   # FP用：予約を拒否
   def reject
+    set_booking
+    return if performed?
     return unless can_modify_booking?("拒否")
 
     if @booking.update(status: :rejected)
@@ -104,19 +70,61 @@ class BookingsController < ApplicationController
 
   private
 
-  def set_booking
+  def load_bookings_for_current_user
     if current_user.role_fp?
-      # FP用：自分のTimeSlotに対する予約を取得
-      @booking = Booking.joins(:time_slot)
+      # FP用：自分のTimeSlotに対する予約一覧
+      Booking.joins(:time_slot)
+             .where(time_slots: { fp_id: current_user.id })
+             .includes(:time_slot, :user)
+             .order(created_at: :desc)
+    else
+      # 一般ユーザー用：自分の予約一覧
+      current_user.bookings.includes(:time_slot, :time_slot => :fp).order(created_at: :desc)
+    end
+  end
+
+  def update_completed_bookings(bookings)
+    # confirmedステータスの予約のみをフィルタリングして更新
+    confirmed_bookings = bookings.select(&:status_confirmed?)
+    confirmed_bookings.each(&:update_to_completed_if_past)
+  end
+
+  def set_booking
+    @booking = if current_user.role_fp?
+                 # FP用：自分のTimeSlotに対する予約を取得（見つからない場合は一般ユーザー用の方法で取得を試みる）
+                 Booking.joins(:time_slot)
                         .where(time_slots: { fp_id: current_user.id })
                         .includes(:time_slot, :user)
-                        .find(params[:id])
-    else
-      # 一般ユーザー用：自分の予約を取得
-      @booking = current_user.bookings.includes(:time_slot, :time_slot => :fp).find(params[:id])
-    end
-  rescue ActiveRecord::RecordNotFound
+                        .find_by(id: params[:id]) || Booking.includes(:time_slot, :user).find_by(id: params[:id])
+               else
+                 # 一般ユーザー用：自分の予約を取得
+                 current_user.bookings.includes(:time_slot, :time_slot => :fp).find_by(id: params[:id])
+               end
+
+    return if @booking
+
     redirect_to bookings_path, alert: "予約が見つかりません", status: :see_other
+  end
+
+  def validate_time_slot_for_booking
+    @time_slot = TimeSlot.find(params[:time_slot_id])
+
+    # 過去の予約枠への予約申請を防ぐ
+    if @time_slot.start_time < Time.current
+      redirect_to time_slots_path, alert: "過去の予約枠には予約できません", status: :see_other
+      return false
+    end
+
+    # 予約可能かどうかをチェック
+    unless @time_slot.available?
+      redirect_to time_slots_path, alert: "この予約枠は既に予約されています", status: :see_other
+      return false
+    end
+
+    true
+  rescue ActiveRecord::RecordNotFound
+    redirect_to time_slots_path, alert: "予約枠が見つかりません", status: :see_other
+    false
   end
 
   def booking_params

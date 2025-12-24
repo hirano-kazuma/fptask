@@ -3,8 +3,6 @@
 class TimeSlot < ApplicationRecord
   belongs_to :fp, class_name: "User"
 
-  has_many :bookings, dependent: :restrict_with_error
-
   # 営業時間設定
   WEEKDAY_START_HOUR = 10 # 平日の開始時間
   WEEKDAY_END_HOUR = 18 # 平日の終了時間
@@ -44,7 +42,10 @@ class TimeSlot < ApplicationRecord
   validate TimeRangeValidator.new
   validate :no_overlapping_slots
 
+  # before_destroyをhas_manyより前に定義することで、コールバックが先に実行される
   before_destroy :check_active_bookings
+
+  has_many :bookings, dependent: :destroy
 
   # スコープ
   scope :future, -> { where("start_time >= ?", Time.current) }
@@ -52,7 +53,7 @@ class TimeSlot < ApplicationRecord
 
   # 予約可能かどうかを判定
   def available?
-    bookings.where.not(status: [:cancelled, :rejected, :completed]).empty?
+    bookings.active.empty?
   end
 
   # 予約可能な枠の情報をハッシュで返す

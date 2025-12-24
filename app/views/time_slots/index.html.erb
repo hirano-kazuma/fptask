@@ -1,10 +1,10 @@
 <% if current_user.role_fp? %>
-  <% provide(:title, "予約枠一覧") %>
-  <h1>予約枠一覧</h1>
+<% provide(:title, "予約枠一覧") %>
+<h1>予約枠一覧</h1>
 
-  <%= link_to "新規作成", new_time_slot_path, class: "btn btn-primary mb-3" %>
+<%= link_to "新規作成", new_time_slot_path, class: "btn btn-primary mb-3" %>
 
-  <%= render "calendar", existing_slots: @existing_slots, view_mode: true, editing_time_slot: nil %>
+<%= render "calendar", existing_slots: @existing_slots, view_mode: true, editing_time_slot: nil %>
 <% else %>
   <% provide(:title, "予約可能な枠一覧") %>
   <h1>予約可能な枠一覧</h1>

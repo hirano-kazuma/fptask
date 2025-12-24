@@ -9,7 +9,7 @@
   </td>
   <td>
     <%= link_to "詳細", booking_path(booking), class: "btn btn-sm btn-outline-primary" %>
-    <% if booking.status_confirmed? || booking.status_pending? %>
+    <% if booking.status_cancellable? %>
       <%= link_to "キャンセル", booking_path(booking),
           data: { turbo_method: :delete, turbo_confirm: "予約をキャンセルしますか？" },
           class: "btn btn-sm btn-outline-danger" %>
