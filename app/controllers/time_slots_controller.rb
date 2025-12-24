@@ -1,6 +1,6 @@
 class TimeSlotsController < ApplicationController
   before_action :logged_in_user
-  before_action :redirect_if_not_fp, except: [:index]
+  before_action :redirect_if_not_fp, except: [ :index ]
 
   def index
     if fp_user?
@@ -16,7 +16,7 @@ class TimeSlotsController < ApplicationController
 
   def show
     if time_slot.nil?
-      return redirect_to_not_found
+      redirect_to_not_found
     end
   end
 
