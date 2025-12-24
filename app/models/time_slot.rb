@@ -106,7 +106,7 @@ class TimeSlot < ApplicationRecord
     # 承認済み、承認待ち、完了の予約をチェック
     # reloadして最新の状態を取得（キャッシュを回避）
     active_bookings = Booking.where(time_slot_id: id)
-                             .where(status: [:pending, :confirmed, :completed])
+                             .where(status: [ :pending, :confirmed, :completed ])
     if active_bookings.exists?
       errors.add(:base, "承認済みまたは承認待ちの予約があるため削除できません")
       throw :abort

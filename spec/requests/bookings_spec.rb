@@ -41,7 +41,7 @@ RSpec.describe "Bookings", type: :request do
 
         it "returns http success and displays bookings for FP's time slots" do
           subject
-      expect(response).to have_http_status(:success)
+          expect(response).to have_http_status(:success)
           expect(response.body).to include("FPへの予約")
         end
       end
@@ -74,7 +74,7 @@ RSpec.describe "Bookings", type: :request do
 
       it "returns http success and displays booking details" do
         subject
-      expect(response).to have_http_status(:success)
+        expect(response).to have_http_status(:success)
         expect(response.body).to include("テスト予約詳細")
       end
     end
@@ -98,9 +98,9 @@ RSpec.describe "Bookings", type: :request do
       before { login_as(general_user) }
 
       context "with valid time_slot_id" do
-    it "returns http success" do
+        it "returns http success" do
           subject
-      expect(response).to have_http_status(:success)
+          expect(response).to have_http_status(:success)
         end
       end
 
@@ -146,9 +146,7 @@ RSpec.describe "Bookings", type: :request do
   describe "POST /bookings" do
     let(:params) do
       {
-        booking: {
-          description: "新しい予約"
-        },
+        booking: { description: "新しい予約" },
         time_slot_id: time_slot.id
       }
     end
@@ -167,14 +165,7 @@ RSpec.describe "Bookings", type: :request do
       end
 
       context "with invalid parameters" do
-        let(:params) do
-          {
-            booking: {
-              description: ""
-            },
-            time_slot_id: time_slot.id
-          }
-        end
+        let(:params) { { booking: { description: "" }, time_slot_id: time_slot.id } }
 
         it "does not create a booking and renders new template" do
           expect { subject }.not_to change(Booking, :count)
@@ -183,14 +174,7 @@ RSpec.describe "Bookings", type: :request do
       end
 
       context "with past time_slot" do
-        let(:params) do
-          {
-            booking: {
-              description: "過去の予約"
-            },
-            time_slot_id: past_time_slot.id
-          }
-        end
+        let(:params) { { booking: { description: "過去の予約" }, time_slot_id: past_time_slot.id } }
 
         it "does not create a booking and redirects with alert" do
           expect { subject }.not_to change(Booking, :count)
@@ -202,14 +186,7 @@ RSpec.describe "Bookings", type: :request do
       context "with unavailable time_slot" do
         before { create(:booking, :pending, time_slot: time_slot, user: other_user, description: "既存の予約") }
 
-        let(:params) do
-          {
-            booking: {
-              description: "重複予約"
-            },
-            time_slot_id: time_slot.id
-          }
-        end
+        let(:params) { { booking: { description: "重複予約" }, time_slot_id: time_slot.id } }
 
         it "does not create a booking and redirects with alert" do
           expect { subject }.not_to change(Booking, :count)

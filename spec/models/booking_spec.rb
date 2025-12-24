@@ -5,7 +5,8 @@ require 'rails_helper'
 RSpec.describe Booking, type: :model do
   let(:fp) { create(:user, :fp) }
   let(:general_user) { create(:user, :general) }
-  let(:time_slot) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 10:00"), end_time: Time.zone.parse("2025-12-19 10:30")) }
+  let(:base_date) { Time.zone.parse("2025-12-19") }
+  let(:time_slot) { create(:time_slot, fp: fp, start_time: base_date.change(hour: 10), end_time: base_date.change(hour: 10, min: 30)) }
 
   subject { build(:booking, time_slot: time_slot, user: general_user) }
 
@@ -25,166 +26,118 @@ RSpec.describe Booking, type: :model do
   end
 
   describe 'scopes' do
+    # スコープテスト用のTimeSlotをまとめて定義
+    let(:time_slots) do
+      (10..14).map do |hour|
+        create(:time_slot, fp: fp, start_time: base_date.change(hour: hour), end_time: base_date.change(hour: hour, min: 30))
+      end
+    end
+
     describe '.active' do
-      let(:time_slot_1) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 10:00"), end_time: Time.zone.parse("2025-12-19 10:30")) }
-      let(:time_slot_2) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 11:00"), end_time: Time.zone.parse("2025-12-19 11:30")) }
-      let(:time_slot_3) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 12:00"), end_time: Time.zone.parse("2025-12-19 12:30")) }
-      let(:time_slot_4) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 13:00"), end_time: Time.zone.parse("2025-12-19 13:30")) }
-      let(:time_slot_5) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 14:00"), end_time: Time.zone.parse("2025-12-19 14:30")) }
+      let!(:pending_booking) { create(:booking, :pending, time_slot: time_slots[0], user: general_user) }
+      let!(:confirmed_booking) { create(:booking, :confirmed, time_slot: time_slots[1], user: general_user) }
+      let!(:cancelled_booking) { create(:booking, :cancelled, time_slot: time_slots[2], user: general_user) }
+      let!(:rejected_booking) { create(:booking, :rejected, time_slot: time_slots[3], user: general_user) }
+      let!(:completed_booking) { create(:booking, :completed, time_slot: time_slots[4], user: general_user) }
 
-      let!(:pending_booking) { create(:booking, :pending, time_slot: time_slot_1, user: general_user) }
-      let!(:confirmed_booking) { create(:booking, :confirmed, time_slot: time_slot_2, user: general_user) }
-      let!(:cancelled_booking) { create(:booking, :cancelled, time_slot: time_slot_3, user: general_user) }
-      let!(:rejected_booking) { create(:booking, :rejected, time_slot: time_slot_4, user: general_user) }
-      let!(:completed_booking) { create(:booking, :completed, time_slot: time_slot_5, user: general_user) }
-
-      it 'returns only active bookings' do
-        active_bookings = Booking.active
-        expect(active_bookings).to include(pending_booking, confirmed_booking)
-        expect(active_bookings).not_to include(cancelled_booking, rejected_booking, completed_booking)
+      it 'returns only pending and confirmed bookings' do
+        expect(Booking.active).to contain_exactly(pending_booking, confirmed_booking)
       end
     end
 
     describe '.cancellable' do
-      let(:time_slot_1) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 10:00"), end_time: Time.zone.parse("2025-12-19 10:30")) }
-      let(:time_slot_2) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 11:00"), end_time: Time.zone.parse("2025-12-19 11:30")) }
-      let(:time_slot_3) { create(:time_slot, fp: fp, start_time: Time.zone.parse("2025-12-19 12:00"), end_time: Time.zone.parse("2025-12-19 12:30")) }
+      let!(:pending_booking) { create(:booking, :pending, time_slot: time_slots[0], user: general_user) }
+      let!(:confirmed_booking) { create(:booking, :confirmed, time_slot: time_slots[1], user: general_user) }
+      let!(:completed_booking) { create(:booking, :completed, time_slot: time_slots[2], user: general_user) }
 
-      let!(:pending_booking) { create(:booking, :pending, time_slot: time_slot_1, user: general_user) }
-      let!(:confirmed_booking) { create(:booking, :confirmed, time_slot: time_slot_2, user: general_user) }
-      let!(:completed_booking) { create(:booking, :completed, time_slot: time_slot_3, user: general_user) }
-
-      it 'returns only cancellable bookings' do
-        cancellable_bookings = Booking.cancellable
-        expect(cancellable_bookings).to include(pending_booking, confirmed_booking)
-        expect(cancellable_bookings).not_to include(completed_booking)
+      it 'returns only pending and confirmed bookings' do
+        expect(Booking.cancellable).to contain_exactly(pending_booking, confirmed_booking)
       end
     end
   end
 
+  # キャンセル可能かどうかを判定
   describe '#status_cancellable?' do
-    context 'when status is pending' do
-      subject { create(:booking, :pending, time_slot: time_slot, user: general_user) }
+    subject { booking.status_cancellable? }
 
-      it 'returns true' do
-        expect(subject.status_cancellable?).to be true
+    %i[pending confirmed].each do |status|
+      context "when status is #{status}" do
+        let(:booking) { create(:booking, status, time_slot: time_slot, user: general_user) }
+
+        it { is_expected.to be true }
       end
     end
 
-    context 'when status is confirmed' do
-      subject { create(:booking, :confirmed, time_slot: time_slot, user: general_user) }
+    %i[completed cancelled rejected].each do |status|
+      context "when status is #{status}" do
+        let(:booking) { create(:booking, status, time_slot: time_slot, user: general_user) }
 
-      it 'returns true' do
-        expect(subject.status_cancellable?).to be true
-      end
-    end
-
-    context 'when status is completed' do
-      subject { create(:booking, :completed, time_slot: time_slot, user: general_user) }
-
-      it 'returns false' do
-        expect(subject.status_cancellable?).to be false
-      end
-    end
-
-    context 'when status is cancelled' do
-      subject { create(:booking, :cancelled, time_slot: time_slot, user: general_user) }
-
-      it 'returns false' do
-        expect(subject.status_cancellable?).to be false
-      end
-    end
-
-    context 'when status is rejected' do
-      subject { create(:booking, :rejected, time_slot: time_slot, user: general_user) }
-
-      it 'returns false' do
-        expect(subject.status_cancellable?).to be false
+        it { is_expected.to be false }
       end
     end
   end
 
   describe '#no_duplicate_booking_for_time_slot' do
-    context 'when there is no existing booking for the time slot' do
-      it 'is valid' do
-        expect(subject).to be_valid
+    context 'when there is no existing booking' do
+      it { is_expected.to be_valid }
+    end
+
+    context 'when there is an active booking (pending/confirmed)' do
+      %i[pending confirmed].each do |status|
+        context "with #{status} booking" do
+          before { create(:booking, status, time_slot: time_slot, user: general_user, description: "既存の予約") }
+
+          it { is_expected.to be_invalid }
+
+          it 'has duplicate error message' do
+            subject.valid?
+            expect(subject.errors[:base]).to include(Booking::DUPLICATE_BOOKING_MESSAGE)
+          end
+        end
       end
     end
 
-    context 'when there is a pending booking for the same time slot' do
-      before { create(:booking, :pending, time_slot: time_slot, user: general_user, description: "既存の予約") }
+    context 'when there is an inactive booking (cancelled/rejected/completed)' do
+      %i[cancelled rejected completed].each do |status|
+        context "with #{status} booking" do
+          before { create(:booking, status, time_slot: time_slot, user: general_user, description: "既存の予約") }
 
-      it 'is invalid' do
-        expect(subject).to be_invalid
-        expect(subject.errors[:base]).to include(Booking::DUPLICATE_BOOKING_MESSAGE)
-      end
-    end
-
-    context 'when there is a confirmed booking for the same time slot' do
-      before { create(:booking, :confirmed, time_slot: time_slot, user: general_user, description: "既存の予約") }
-
-      it 'is invalid' do
-        expect(subject).to be_invalid
-        expect(subject.errors[:base]).to include(Booking::DUPLICATE_BOOKING_MESSAGE)
-      end
-    end
-
-    context 'when there is a cancelled booking for the same time slot' do
-      before { create(:booking, :cancelled, time_slot: time_slot, user: general_user, description: "既存の予約") }
-
-      it 'is valid' do
-        expect(subject).to be_valid
-      end
-    end
-
-    context 'when there is a rejected booking for the same time slot' do
-      before { create(:booking, :rejected, time_slot: time_slot, user: general_user, description: "既存の予約") }
-
-      it 'is valid' do
-        expect(subject).to be_valid
-      end
-    end
-
-    context 'when there is a completed booking for the same time slot' do
-      before { create(:booking, :completed, time_slot: time_slot, user: general_user, description: "既存の予約") }
-
-      it 'is valid' do
-        expect(subject).to be_valid
+          it { is_expected.to be_valid }
+        end
       end
     end
   end
 
   describe '#update_to_completed_if_past' do
+    let(:past_time) { Time.current.beginning_of_day.change(hour: 10) - 1.day }
+    let(:future_time) { Time.current.beginning_of_day.change(hour: 10) + 1.day }
+    let(:past_time_slot) { create(:time_slot, fp: fp, start_time: past_time, end_time: past_time + 30.minutes) }
+    let(:future_time_slot) { create(:time_slot, fp: fp, start_time: future_time, end_time: future_time + 30.minutes) }
+
     context 'when status is confirmed and end_time has passed' do
-      let(:past_time) { Time.current.beginning_of_day.change(hour: 10, min: 0) - 1.day }
-      let(:past_time_slot) { create(:time_slot, fp: fp, start_time: past_time, end_time: past_time + 30.minutes) }
-      subject { create(:booking, :confirmed, time_slot: past_time_slot, user: general_user, description: "過去の予約") }
+      let(:booking) { create(:booking, :confirmed, time_slot: past_time_slot, user: general_user) }
 
       it 'updates status to completed' do
-        subject.update_to_completed_if_past
-        expect(subject.reload.status).to eq('completed')
+        booking.update_to_completed_if_past
+        expect(booking.reload).to be_status_completed
       end
     end
 
     context 'when status is confirmed but end_time has not passed' do
-      let(:future_time) { Time.current.beginning_of_day.change(hour: 10, min: 0) + 1.day }
-      let(:future_time_slot) { create(:time_slot, fp: fp, start_time: future_time, end_time: future_time + 30.minutes) }
-      subject { create(:booking, :confirmed, time_slot: future_time_slot, user: general_user, description: "未来の予約") }
+      let(:booking) { create(:booking, :confirmed, time_slot: future_time_slot, user: general_user) }
 
       it 'does not update status' do
-        subject.update_to_completed_if_past
-        expect(subject.reload.status).to eq('confirmed')
+        booking.update_to_completed_if_past
+        expect(booking.reload).to be_status_confirmed
       end
     end
 
-    context 'when status is pending' do
-      let(:past_time) { Time.current.beginning_of_day.change(hour: 10, min: 0) - 1.day }
-      let(:past_time_slot) { create(:time_slot, fp: fp, start_time: past_time, end_time: past_time + 30.minutes) }
-      subject { create(:booking, :pending, time_slot: past_time_slot, user: general_user, description: "過去の予約") }
+    context 'when status is pending (even if end_time has passed)' do
+      let(:booking) { create(:booking, :pending, time_slot: past_time_slot, user: general_user) }
 
       it 'does not update status' do
-        subject.update_to_completed_if_past
-        expect(subject.reload.status).to eq('pending')
+        booking.update_to_completed_if_past
+        expect(booking.reload).to be_status_pending
       end
     end
   end

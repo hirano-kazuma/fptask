@@ -20,8 +20,8 @@ class Booking < ApplicationRecord
   validates :description, presence: true
   validate :no_duplicate_booking_for_time_slot
 
-  scope :active, -> { where.not(status: [:cancelled, :rejected, :completed]) }
-  scope :cancellable, -> { where(status: [:pending, :confirmed]) }
+  scope :active, -> { where.not(status: [ :cancelled, :rejected, :completed ]) }
+  scope :cancellable, -> { where(status: [ :pending, :confirmed ]) }
 
   # 確定済みの予約がend_timeを過ぎたら自動でcompletedに更新
   def update_to_completed_if_past

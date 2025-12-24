@@ -7,8 +7,11 @@ class BookingsController < ApplicationController
   end
 
   def show
-    set_booking
-    return if performed?
+    if booking.nil?
+      return redirect_to_not_found
+    end
+
+    @booking = booking
     @booking.update_to_completed_if_past
   end
 
@@ -30,25 +33,28 @@ class BookingsController < ApplicationController
   end
 
   def destroy
-    set_booking
-    return if performed?
+    if booking.nil?
+      return redirect_to_not_found
+    end
 
-    unless @booking.status_cancellable?
+    unless booking.status_cancellable?
       redirect_to bookings_path, alert: "完了済みの予約はキャンセルできません", status: :see_other
       return
     end
 
-    @booking.destroy
+    booking.destroy
     redirect_to bookings_path, notice: "予約をキャンセルしました", status: :see_other
   end
 
   # FP用：予約を承認
   def confirm
-    set_booking
-    return if performed?
+    if booking.nil?
+      return redirect_to_not_found
+    end
+
     return unless can_modify_booking?("承認")
 
-    if @booking.update(status: :confirmed)
+    if booking.update(status: :confirmed)
       redirect_to bookings_path, notice: "予約を承認しました"
     else
       redirect_to bookings_path, alert: "予約の承認に失敗しました"
@@ -57,11 +63,13 @@ class BookingsController < ApplicationController
 
   # FP用：予約を拒否
   def reject
-    set_booking
-    return if performed?
+    if booking.nil?
+      return redirect_to_not_found
+    end
+
     return unless can_modify_booking?("拒否")
 
-    if @booking.update(status: :rejected)
+    if booking.update(status: :rejected)
       redirect_to bookings_path, notice: "予約を拒否しました"
     else
       redirect_to bookings_path, alert: "予約の拒否に失敗しました"
@@ -69,6 +77,25 @@ class BookingsController < ApplicationController
   end
 
   private
+
+  # メモ化
+  def booking
+    @booking ||= if current_user.role_fp?
+      # FP用：自分のTimeSlotに対する予約を取得
+      Booking.joins(:time_slot)
+             .where(time_slots: { fp_id: current_user.id })
+             .includes(:time_slot, :user)
+             .find_by(id: params[:id])
+    else
+      # 一般ユーザー用：自分の予約を取得
+      current_user.bookings.includes(:time_slot, time_slot: :fp).find_by(id: params[:id])
+    end
+  end
+
+  # 予約が見つからない場合のリダイレクト
+  def redirect_to_not_found
+    redirect_to bookings_path, alert: "予約が見つかりません", status: :see_other
+  end
 
   def load_bookings_for_current_user
     if current_user.role_fp?
@@ -79,7 +106,7 @@ class BookingsController < ApplicationController
              .order(created_at: :desc)
     else
       # 一般ユーザー用：自分の予約一覧
-      current_user.bookings.includes(:time_slot, :time_slot => :fp).order(created_at: :desc)
+      current_user.bookings.includes(:time_slot, time_slot: :fp).order(created_at: :desc)
     end
   end
 
@@ -87,23 +114,6 @@ class BookingsController < ApplicationController
     # confirmedステータスの予約のみをフィルタリングして更新
     confirmed_bookings = bookings.select(&:status_confirmed?)
     confirmed_bookings.each(&:update_to_completed_if_past)
-  end
-
-  def set_booking
-    @booking = if current_user.role_fp?
-                 # FP用：自分のTimeSlotに対する予約を取得（見つからない場合は一般ユーザー用の方法で取得を試みる）
-                 Booking.joins(:time_slot)
-                        .where(time_slots: { fp_id: current_user.id })
-                        .includes(:time_slot, :user)
-                        .find_by(id: params[:id]) || Booking.includes(:time_slot, :user).find_by(id: params[:id])
-               else
-                 # 一般ユーザー用：自分の予約を取得
-                 current_user.bookings.includes(:time_slot, :time_slot => :fp).find_by(id: params[:id])
-               end
-
-    return if @booking
-
-    redirect_to bookings_path, alert: "予約が見つかりません", status: :see_other
   end
 
   def validate_time_slot_for_booking
@@ -140,13 +150,13 @@ class BookingsController < ApplicationController
     end
 
     # 自分のTimeSlotに対する予約か確認
-    unless @booking.time_slot.fp_id == current_user.id
+    unless booking.time_slot.fp_id == current_user.id
       redirect_to bookings_path, alert: "この予約を操作する権限がありません", status: :see_other
       return false
     end
 
     # 承認待ちの予約のみ操作可能
-    unless @booking.status_pending?
+    unless booking.status_pending?
       redirect_to bookings_path, alert: "承認待ちの予約のみ#{action_name}できます", status: :see_other
       return false
     end
