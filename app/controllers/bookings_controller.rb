@@ -70,24 +70,24 @@ class BookingsController < ApplicationController
     bookings = if current_user.role_fp?
                  # FP用：自分のTimeSlotに対する予約一覧
                  Booking.joins(:time_slot).where(time_slots: { fp_id: current_user.id })
-               else
+    else
                  # 一般ユーザー用：自分の予約一覧
                  current_user.bookings
-               end
+    end
     bookings.includes(:time_slot, time_slot: :fp).order(created_at: :desc)
   end
 
   # @return [Boolean, String] バリデーション結果とエラーメッセージ
   def validate_time_slot_for_booking
-    return [false, "予約枠が見つかりません"] if time_slot.nil?
+    return [ false, "予約枠が見つかりません" ] if time_slot.nil?
 
     # 過去の予約枠への予約申請を防ぐ
-    return [false, "過去の予約枠には予約できません"] if time_slot.start_time < Time.current
+    return [ false, "過去の予約枠には予約できません" ] if time_slot.start_time < Time.current
 
     # 予約可能かどうかをチェック
-    return [false, "この予約枠は既に予約されています"] unless time_slot.available?
+    return [ false, "この予約枠は既に予約されています" ] unless time_slot.available?
 
-    [true, nil]
+    [ true, nil ]
   end
 
   def time_slot

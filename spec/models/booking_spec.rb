@@ -56,23 +56,45 @@ RSpec.describe Booking, type: :model do
     end
   end
 
-  # キャンセル可能かどうかを判定
-  describe '#status_cancellable?' do
-    subject { booking.status_cancellable? }
+  # キャンセル可能かどうかを判定（ステータス＋過去チェック）
+  describe '#cancellable?' do
+    # 未来のtime_slotを使用
+    let(:future_time) { Time.zone.parse("2025-12-29 10:00") }  # 月曜日（未来）
+    let(:future_time_slot) { create(:time_slot, fp: fp, start_time: future_time, end_time: future_time + 30.minutes) }
+    # 過去のtime_slotを使用
+    let(:past_time) { Time.zone.parse("2025-12-19 10:00") }  # 金曜日（過去）
+    let(:past_time_slot) { create(:time_slot, fp: fp, start_time: past_time, end_time: past_time + 30.minutes) }
 
-    %i[pending confirmed].each do |status|
-      context "when status is #{status}" do
-        let(:booking) { create(:booking, status, time_slot: time_slot, user: general_user) }
+    context 'when time_slot is in the future' do
+      subject { booking.cancellable? }
 
-        it { is_expected.to be true }
+      %i[pending confirmed].each do |status|
+        context "when status is #{status}" do
+          let(:booking) { create(:booking, status, time_slot: future_time_slot, user: general_user) }
+
+          it { is_expected.to be true }
+        end
+      end
+
+      %i[completed cancelled rejected].each do |status|
+        context "when status is #{status}" do
+          let(:booking) { create(:booking, status, time_slot: future_time_slot, user: general_user) }
+
+          it { is_expected.to be false }
+        end
       end
     end
 
-    %i[completed cancelled rejected].each do |status|
-      context "when status is #{status}" do
-        let(:booking) { create(:booking, status, time_slot: time_slot, user: general_user) }
+    context 'when time_slot is in the past' do
+      subject { booking.cancellable? }
 
-        it { is_expected.to be false }
+      # 過去の場合はステータスに関係なくキャンセル不可
+      %i[pending confirmed].each do |status|
+        context "when status is #{status}" do
+          let(:booking) { create(:booking, status, time_slot: past_time_slot, user: general_user) }
+
+          it { is_expected.to be false }
+        end
       end
     end
   end
@@ -102,15 +124,16 @@ RSpec.describe Booking, type: :model do
         context "with #{status} booking" do
           before { create(:booking, status, time_slot: time_slot, user: general_user, description: "既存の予約") }
 
-          it { is_expected.to be_valid }
+          it { is_expected.to be_invalid }
         end
       end
     end
   end
 
   describe '#update_to_completed_if_past' do
-    let(:past_time) { Time.current.beginning_of_day.change(hour: 10) - 1.day }
-    let(:future_time) { Time.current.beginning_of_day.change(hour: 10) + 1.day }
+    # 固定の平日日付を使用（土曜日を回避）
+    let(:past_time) { Time.zone.parse("2025-12-19 10:00") }      # 金曜日（過去）
+    let(:future_time) { Time.zone.parse("2025-12-29 10:00") }    # 月曜日（未来）
     let(:past_time_slot) { create(:time_slot, fp: fp, start_time: past_time, end_time: past_time + 30.minutes) }
     let(:future_time_slot) { create(:time_slot, fp: fp, start_time: future_time, end_time: future_time + 30.minutes) }
 

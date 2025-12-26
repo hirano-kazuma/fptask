@@ -39,7 +39,8 @@ RSpec.describe "TimeSlots", type: :request do
       end
 
       context "with fp_id parameter" do
-        let(:future_time) { Time.current.beginning_of_day.change(hour: 10, min: 0) + 1.day }
+        # 固定の平日日付を使用（土曜日を回避）
+        let(:future_time) { Time.zone.parse("2025-12-29 10:00") }  # 月曜日（未来）
         let!(:fp_time_slot) do
           create(:time_slot, fp: fp_user, start_time: future_time, end_time: future_time + 30.minutes)
         end

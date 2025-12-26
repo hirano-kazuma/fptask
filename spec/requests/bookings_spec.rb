@@ -5,8 +5,11 @@ RSpec.describe "Bookings", type: :request do
   let(:general_user) { create(:user, :general) }
   let(:other_user) { create(:user, :general) }
 
-  let(:time_slot) { create(:time_slot, fp: fp, start_time: 1.day.from_now.change(hour: 10, min: 0), end_time: 1.day.from_now.change(hour: 10, min: 30)) }
-  let(:past_time_slot) { create(:time_slot, fp: fp, start_time: 1.day.ago.change(hour: 10, min: 0), end_time: 1.day.ago.change(hour: 10, min: 30)) }
+  # 固定の平日日付を使用（土曜日を回避）
+  let(:future_weekday) { Time.zone.parse("2025-12-29 10:00") }   # 月曜日（未来）
+  let(:past_weekday) { Time.zone.parse("2025-12-19 10:00") }     # 金曜日（過去）
+  let(:time_slot) { create(:time_slot, fp: fp, start_time: future_weekday, end_time: future_weekday + 30.minutes) }
+  let(:past_time_slot) { create(:time_slot, fp: fp, start_time: past_weekday, end_time: past_weekday + 30.minutes) }
 
   describe "GET /bookings" do
     subject { get bookings_path }
@@ -212,8 +215,8 @@ RSpec.describe "Bookings", type: :request do
       before { login_as(general_user) }
 
       context "when booking is pending" do
-        it "deletes the booking, redirects to bookings index, and sets flash notice" do
-          expect { subject }.to change(Booking, :count).by(-1)
+        it "cancels the booking (logical delete), redirects to bookings index, and sets flash notice" do
+          expect { subject }.to change { booking.reload.status }.from('pending').to('cancelled')
           expect(response).to redirect_to(bookings_path)
           expect(flash[:notice]).to include("予約をキャンセルしました")
         end
@@ -222,18 +225,18 @@ RSpec.describe "Bookings", type: :request do
       context "when booking is confirmed" do
         before { booking.update!(status: :confirmed) }
 
-        it "deletes the booking" do
-          expect { subject }.to change(Booking, :count).by(-1)
+        it "cancels the booking (logical delete)" do
+          expect { subject }.to change { booking.reload.status }.from('confirmed').to('cancelled')
         end
       end
 
       context "when booking is completed" do
         before { booking.update!(status: :completed) }
 
-        it "does not delete the booking and redirects with alert" do
-          expect { subject }.not_to change(Booking, :count)
+        it "does not cancel the booking and redirects with alert" do
+          expect { subject }.not_to change { booking.reload.status }
           expect(response).to redirect_to(bookings_path)
-          expect(flash[:alert]).to include("完了済みの予約はキャンセルできません")
+          expect(flash[:alert]).to include("この予約はキャンセルできません")
         end
       end
     end
@@ -241,8 +244,8 @@ RSpec.describe "Bookings", type: :request do
     context "when logged in as different user" do
       before { login_as(other_user) }
 
-      it "does not delete the booking and redirects with alert" do
-        expect { subject }.not_to change(Booking, :count)
+      it "does not cancel the booking and redirects with alert" do
+        expect { subject }.not_to change { booking.reload.status }
         expect(response).to redirect_to(bookings_path)
         expect(flash[:alert]).to include("予約が見つかりません")
       end
@@ -270,7 +273,8 @@ RSpec.describe "Bookings", type: :request do
       it "does not update booking status and redirects with alert" do
         expect { subject }.not_to change { booking.reload.status }
         expect(response).to redirect_to(bookings_path)
-        expect(flash[:alert]).to include("FPユーザーのみ操作できます")
+        # 一般ユーザーはFPのTimeSlotに紐づく予約を検索できないため「予約が見つかりません」が返る
+        expect(flash[:alert]).to include("予約が見つかりません")
       end
     end
 
@@ -310,7 +314,8 @@ RSpec.describe "Bookings", type: :request do
       it "does not update booking status and redirects with alert" do
         expect { subject }.not_to change { booking.reload.status }
         expect(response).to redirect_to(bookings_path)
-        expect(flash[:alert]).to include("FPユーザーのみ操作できます")
+        # 一般ユーザーはFPのTimeSlotに紐づく予約を検索できないため「予約が見つかりません」が返る
+        expect(flash[:alert]).to include("予約が見つかりません")
       end
     end
 

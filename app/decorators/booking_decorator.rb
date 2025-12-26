@@ -5,7 +5,7 @@ module BookingDecorator
   # confirmed かつ end_time が過去の場合は completed として表示
   def display_status
     if status_confirmed? && time_slot.end_time < Time.current
-      'completed'
+      "completed"
     else
       status
     end

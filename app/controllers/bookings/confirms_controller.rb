@@ -27,11 +27,11 @@ module Bookings
 
     # @return [Boolean, String] バリデーション結果とエラーメッセージ
     def validate_booking
-      return [false, "予約が見つかりません"] if booking.nil?
-      return [false, "FPユーザーのみ操作できます"] unless current_user.role_fp?
-      return [false, "承認待ちの予約のみ承認できます"] unless booking.status_pending?
+      return [ false, "予約が見つかりません" ] if booking.nil?
+      return [ false, "FPユーザーのみ操作できます" ] unless current_user.role_fp?
+      return [ false, "承認待ちの予約のみ承認できます" ] unless booking.status_pending?
 
-      [true, nil]
+      [ true, nil ]
     end
   end
 end
