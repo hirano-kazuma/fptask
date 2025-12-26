@@ -17,4 +17,14 @@ class User < ApplicationRecord
 
   has_many :time_slots, foreign_key: "fp_id", dependent: :destroy
   has_many :bookings, dependent: :destroy
+
+  # FP用：自分のTimeSlotに対する未承認の予約数を返す
+  def pending_bookings_count
+    return 0 unless role_fp?
+
+    Booking.joins(:time_slot)
+           .where(time_slots: { fp_id: id })
+           .where(status: :pending)
+           .count
+  end
 end

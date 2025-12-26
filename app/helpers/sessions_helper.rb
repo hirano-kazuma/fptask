@@ -29,11 +29,8 @@ module SessionsHelper
 
   # FP用：未承認の予約申請数を返す
   def pending_bookings_count
-    return 0 unless logged_in? && current_user.role_fp?
+    return 0 unless logged_in?
 
-    Booking.joins(:time_slot)
-           .where(time_slots: { fp_id: current_user.id })
-           .where(status: :pending)
-           .count
+    current_user.pending_bookings_count
   end
 end

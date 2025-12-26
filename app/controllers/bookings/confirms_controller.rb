@@ -21,7 +21,6 @@ module Bookings
     def booking
       @booking ||= Booking.joins(:time_slot)
                           .where(time_slots: { fp_id: current_user.id })
-                          .includes(:time_slot, :user)
                           .find_by(id: params[:booking_id])
     end
 

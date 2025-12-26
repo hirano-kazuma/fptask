@@ -5,7 +5,7 @@
   <div class="card-body">
     <dl class="row">
       <dt class="col-sm-3">予約日時</dt>
-      <dd class="col-sm-9"><%= booking_time_range(@booking) %></dd>
+      <dd class="col-sm-9"><%= booking_time_range_str(@booking) %></dd>
 
       <% if current_user.role_fp? %>
         <dt class="col-sm-3">予約者</dt>

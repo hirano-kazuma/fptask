@@ -17,7 +17,7 @@ module BookingsHelper
   end
 
   # 予約の日時範囲をフォーマットして返す
-  def booking_time_range(booking)
+  def booking_time_range_str(booking)
     start_time = booking.time_slot.start_time.strftime("%Y年%m月%d日 %H:%M")
     end_time = booking.time_slot.end_time.strftime("%H:%M")
     "#{start_time} - #{end_time}"

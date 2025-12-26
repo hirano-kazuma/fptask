@@ -130,27 +130,28 @@ RSpec.describe TimeSlot, type: :model do
       end
     end
 
+    # DBにユニーク制約があるため、どのステータスでも予約があれば新規予約不可
     context 'when there is only a cancelled booking' do
       before { create(:booking, :cancelled, time_slot: time_slot, user: create(:user, :general)) }
 
-      it 'returns true' do
-        expect(time_slot.available?).to be true
+      it 'returns false' do
+        expect(time_slot.available?).to be false
       end
     end
 
     context 'when there is only a rejected booking' do
       before { create(:booking, :rejected, time_slot: time_slot, user: create(:user, :general)) }
 
-      it 'returns true' do
-        expect(time_slot.available?).to be true
+      it 'returns false' do
+        expect(time_slot.available?).to be false
       end
     end
 
     context 'when there is only a completed booking' do
       before { create(:booking, :completed, time_slot: time_slot, user: create(:user, :general)) }
 
-      it 'returns true' do
-        expect(time_slot.available?).to be true
+      it 'returns false' do
+        expect(time_slot.available?).to be false
       end
     end
   end

@@ -14,10 +14,11 @@ class TimeSlot < ApplicationRecord
   validates_with TimeRangeValidator
   validate :no_overlapping_slots
 
-  # before_destroyをhas_manyより前に定義することで、コールバックが先に実行される
+  # before_destroyをhas_oneより前に定義することで、コールバックが先に実行される
   before_destroy :check_active_bookings
 
-  has_many :bookings, dependent: :destroy
+  # 1つのTimeSlotに1つのBooking（DBのユニーク制約と整合）
+  has_one :booking, dependent: :destroy
 
   # スコープ
   scope :future, -> { where("start_time >= ?", Time.current) }
@@ -25,7 +26,7 @@ class TimeSlot < ApplicationRecord
 
   # 予約可能かどうかを判定
   def available?
-    bookings.active.empty?
+    booking.nil?
   end
 
   # 予約可能な枠の情報をハッシュで返す

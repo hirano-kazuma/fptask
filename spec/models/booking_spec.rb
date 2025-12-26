@@ -26,10 +26,11 @@ RSpec.describe Booking, type: :model do
   end
 
   describe 'scopes' do
-    # スコープテスト用のTimeSlotをまとめて定義
+    # スコープテスト用のTimeSlot（未来の日付を使用）
+    let(:future_date) { Time.zone.parse("2025-12-29") }  # 月曜日（未来）
     let(:time_slots) do
       (10..14).map do |hour|
-        create(:time_slot, fp: fp, start_time: base_date.change(hour: hour), end_time: base_date.change(hour: hour, min: 30))
+        create(:time_slot, fp: fp, start_time: future_date.change(hour: hour), end_time: future_date.change(hour: hour, min: 30))
       end
     end
 
@@ -99,32 +100,22 @@ RSpec.describe Booking, type: :model do
     end
   end
 
-  describe '#no_duplicate_booking_for_time_slot' do
+  describe 'uniqueness validation for time_slot_id' do
     context 'when there is no existing booking' do
       it { is_expected.to be_valid }
     end
 
-    context 'when there is an active booking (pending/confirmed)' do
-      %i[pending confirmed].each do |status|
+    context 'when there is an existing booking' do
+      %i[pending confirmed cancelled rejected completed].each do |status|
         context "with #{status} booking" do
           before { create(:booking, status, time_slot: time_slot, user: general_user, description: "既存の予約") }
 
           it { is_expected.to be_invalid }
 
-          it 'has duplicate error message' do
+          it 'has duplicate error message on time_slot_id' do
             subject.valid?
-            expect(subject.errors[:base]).to include(Booking::DUPLICATE_BOOKING_MESSAGE)
+            expect(subject.errors[:time_slot_id]).to include(Booking::DUPLICATE_BOOKING_MESSAGE)
           end
-        end
-      end
-    end
-
-    context 'when there is an inactive booking (cancelled/rejected/completed)' do
-      %i[cancelled rejected completed].each do |status|
-        context "with #{status} booking" do
-          before { create(:booking, status, time_slot: time_slot, user: general_user, description: "既存の予約") }
-
-          it { is_expected.to be_invalid }
         end
       end
     end

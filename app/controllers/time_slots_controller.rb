@@ -11,7 +11,7 @@ class TimeSlotsController < ApplicationController
       @fps = User.where(role: :fp).order(:name)
       selected_fp_id = params[:fp_id]&.to_i
 
-      @time_slots = TimeSlot.includes(:bookings, :fp)
+      @time_slots = TimeSlot.includes(:booking, :fp)
                             .future
                             .by_fp(selected_fp_id)
                             .order(:start_time)
