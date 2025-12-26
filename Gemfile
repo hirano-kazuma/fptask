@@ -72,7 +72,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
-  gem "shoulda-matchers", "~> 6.0"
+  gem "shoulda-matchers", "~> 7.0"
   # FactoryBot for test data generation [https://github.com/thoughtbot/factory_bot_rails]
   gem "factory_bot_rails"
 end
