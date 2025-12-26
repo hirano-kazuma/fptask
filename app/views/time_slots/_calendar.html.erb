@@ -1,0 +1,69 @@
+<% editing_time_slot = local_assigns[:editing_time_slot] %>
+<% view_mode = local_assigns[:view_mode] || false %>
+<div id="calendar-container"
+     data-existing-slots="<%= (existing_slots || []).to_json %>"
+     data-editing-time-slot="<%= editing_time_slot ? editing_time_slot.to_calendar_json : 'null' %>"
+     data-view-mode="<%= view_mode ? 'true' : 'false' %>">
+  <div class="row">
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-body">
+          <div class="calendar">
+            <div class="calendar-header">
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="prev-month">◀</button>
+              <strong id="current-month"></strong>
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="next-month">▶</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card">
+        <div class="card-header" id="selected-date-header">
+          日付を選択してください
+        </div>
+        <div class="card-body" id="time-slots-container">
+          <p class="text-muted">カレンダーから日付をクリックしてください</p>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">営業時間</div>
+        <div class="card-body">
+          <p class="mb-1"><strong>平日:</strong> <%= sprintf("%02d:00", TimeRangeValidator::WEEKDAY_START_HOUR) %>〜<%= sprintf("%02d:00", TimeRangeValidator::WEEKDAY_END_HOUR) %></p>
+          <p class="mb-1"><strong>土曜:</strong> <%= sprintf("%02d:00", TimeRangeValidator::SATURDAY_START_HOUR) %>〜<%= sprintf("%02d:00", TimeRangeValidator::SATURDAY_END_HOUR) %></p>
+          <p class="mb-1"><strong>日曜:</strong> 休業日</p>
+          <hr>
+          <% unless view_mode %>
+            <p class="mb-1"><span class="badge bg-outline-primary border border-primary text-primary">◯ 10:00</span> クリックで<%= editing_time_slot ? '更新' : '作成' %></p>
+          <% end %>
+          <p class="mb-1"><span class="badge bg-success">✓ 10:00</span> 作成済み</p>
+          <% if editing_time_slot %>
+            <p class="mb-1"><span class="badge bg-warning">✏️ 10:00</span> 編集中</p>
+          <% end %>
+          <% if view_mode %>
+            <p class="mb-0"><span class="badge bg-info">ℹ️ 10:00</span> クリックで詳細</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% unless view_mode %>
+    <% if editing_time_slot %>
+      <%= form_with model: editing_time_slot, id: "time-slot-form", class: "d-none" do %>
+        <input type="hidden" name="time_slot[start_time]" id="hidden-start-time">
+        <input type="hidden" name="time_slot[end_time]" id="hidden-end-time">
+      <% end %>
+    <% else %>
+      <%= form_with url: time_slots_path, method: :post, id: "time-slot-form", class: "d-none" do %>
+        <input type="hidden" name="time_slot[start_time]" id="hidden-start-time">
+        <input type="hidden" name="time_slot[end_time]" id="hidden-end-time">
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

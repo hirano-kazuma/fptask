@@ -5,16 +5,34 @@ require 'rails_helper'
 RSpec.describe "Users", type: :request do
   let!(:user) { User.create!(name: 'Test User', email: 'test@example.com', password: 'password', role: :general) }
   let!(:other_user) { User.create!(name: 'Other User', email: 'other@example.com', password: 'password', role: :general) }
+  let!(:fp_user) { User.create!(name: 'FP User', email: 'fp@example.com', password: 'password', role: :fp) }
 
   describe "GET /users/:id" do
-    it "returns http success" do
-      get user_path(user)
-      expect(response).to have_http_status(:ok)
+    context "when logged in as the user" do
+      before do
+        post session_path, params: { session: { email: user.email, password: 'password' } }
+      end
+
+      it "returns http success and displays user name" do
+        get user_path(user)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(user.name)
+      end
     end
 
-    it "displays user name" do
-      get user_path(user)
-      expect(response.body).to include(user.name)
+    context "when viewing FP user profile" do
+      it "returns http success and displays FP user name" do
+        get user_path(fp_user)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(fp_user.name)
+      end
+    end
+
+    context "when viewing general user profile (not logged in)" do
+      it "redirects to root" do
+        get user_path(user)
+        expect(response).to redirect_to(root_url)
+      end
     end
   end
 
@@ -38,7 +56,7 @@ RSpec.describe "Users", type: :request do
         expect(response).to redirect_to(new_session_path)
 
         follow_redirect!
-        expect(response.body).to include("ログインが必要です")
+        expect(response.body).to include("ログインしてください")
       end
     end
 

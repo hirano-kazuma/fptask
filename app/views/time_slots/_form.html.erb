@@ -1,0 +1,16 @@
+<%= form_with(model: @time_slot) do |f| %>
+  <%= render "shared/error_messages", object: @time_slot %>
+
+  <div class="mb-3">
+    <%= f.label :start_time, "開始時間", class: "form-label" %>
+    <%= f.datetime_local_field :start_time, class: "form-control", step: 1800 %>
+    <div class="form-text">00分または30分から選択してください</div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :end_time, "終了時間", class: "form-label" %>
+    <%= f.datetime_local_field :end_time, class: "form-control", step: 1800 %>
+  </div>
+
+  <%= f.submit class: "btn btn-primary" %>
+<% end %>

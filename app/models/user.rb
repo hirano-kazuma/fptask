@@ -14,4 +14,6 @@ class User < ApplicationRecord
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
 
   has_secure_password
+
+  has_many :time_slots, foreign_key: "fp_id", dependent: :destroy
 end

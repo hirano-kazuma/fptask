@@ -47,6 +47,8 @@ GEM
       erubi (~> 1.11)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
+    active_decorator (1.5.1)
+      activesupport
     activejob (8.1.1)
       activesupport (= 8.1.1)
       globalid (>= 0.3.6)
@@ -117,6 +119,11 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
+    factory_bot (6.5.6)
+      activesupport (>= 6.1.0)
+    factory_bot_rails (6.5.1)
+      factory_bot (~> 6.5)
+      railties (>= 6.1.0)
     ffi (1.17.2-aarch64-linux-gnu)
     ffi (1.17.2-aarch64-linux-musl)
     ffi (1.17.2-arm-linux-gnu)
@@ -419,6 +426,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  active_decorator
   bcrypt (~> 3.1.7)
   bootsnap
   bootstrap (~> 5.3.0)
@@ -426,6 +434,7 @@ DEPENDENCIES
   bundler-audit
   capybara
   debug
+  factory_bot_rails
   image_processing (~> 1.2)
   importmap-rails
   jbuilder

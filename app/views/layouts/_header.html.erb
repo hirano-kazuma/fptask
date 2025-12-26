@@ -18,6 +18,14 @@
           <%= link_to "About", about_path, class: "nav-link" %>
         </li>
         <% if logged_in? %>
+          <% if current_user.role_fp? %>
+            <li class="nav-item">
+              <%= link_to "予約枠作成", new_time_slot_path, class: "nav-link" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "予約枠一覧", time_slots_path, class: "nav-link" %>
+            </li>
+          <% end %>
           <li class="nav-item dropdown">
             <a href="#" id="account" class="nav-link dropdown-toggle">
               Account
