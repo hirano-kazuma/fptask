@@ -22,9 +22,9 @@ Rails.application.routes.draw do
 
   # 予約（一般ユーザー用・FP用）
   resources :bookings, only: %i[index show new create destroy] do
-    member do
-      patch :confirm  # 承認
-      patch :reject   # 拒否
+    scope module: :bookings do
+      resource :confirm, only: %i[create]
+      resource :reject, only: %i[create]
     end
   end
 

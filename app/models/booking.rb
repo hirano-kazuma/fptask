@@ -31,18 +31,18 @@ class Booking < ApplicationRecord
     update(status: :completed)
   end
 
-  # キャンセル可能かどうかを判定
-  def status_cancellable?
-    status_pending? || status_confirmed?
+  # キャンセル可能かどうか（ステータス＋過去チェック）
+  def cancellable?
+    (status_pending? || status_confirmed?) && time_slot.end_time > Time.current
   end
 
   private
 
-  # 同じTimeSlotへの重複予約を防ぐ（キャンセル済み・拒否済み・完了済みは除く）
+  # 同じTimeSlotへの重複予約を防ぐ（DBユニーク制約の前にチェック）
   def no_duplicate_booking_for_time_slot
     return if time_slot_id.blank?
 
-    return unless Booking.active.where(time_slot_id: time_slot_id).where.not(id: id).exists?
+    return unless Booking.where(time_slot_id: time_slot_id).where.not(id: id).exists?
 
     errors.add(:base, DUPLICATE_BOOKING_MESSAGE)
   end

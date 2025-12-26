@@ -249,9 +249,9 @@ RSpec.describe "Bookings", type: :request do
     end
   end
 
-  describe "PATCH /bookings/:id/confirm" do
+  describe "POST /bookings/:booking_id/confirm" do
     let!(:booking) { create(:booking, :pending, time_slot: time_slot, user: general_user, description: "承認待ちの予約") }
-    subject { patch confirm_booking_path(booking) }
+    subject { post booking_confirm_path(booking) }
 
     context "when logged in as FP owner" do
       before { login_as(fp) }
@@ -288,10 +288,10 @@ RSpec.describe "Bookings", type: :request do
     end
   end
 
-  describe "PATCH /bookings/:id/reject" do
+  describe "POST /bookings/:booking_id/reject" do
     let!(:booking) { create(:booking, :pending, time_slot: time_slot, user: general_user, description: "拒否される予約") }
     let(:booking_id) { booking.id }
-    subject { patch reject_booking_path(booking_id) }
+    subject { post booking_reject_path(booking_id) }
 
     context "when logged in as FP owner" do
       before { login_as(fp) }

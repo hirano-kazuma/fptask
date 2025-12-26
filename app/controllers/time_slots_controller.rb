@@ -5,7 +5,7 @@ class TimeSlotsController < ApplicationController
   def index
     if fp_user?
       set_existing_slots
-    @time_slots = current_user.time_slots.order(:start_time)
+      @time_slots = current_user.time_slots.order(:start_time)
     else
       # 一般ユーザー用：予約可能な枠一覧（未来の枠のみ）
       @fps = User.where(role: :fp).order(:name)
@@ -66,7 +66,7 @@ class TimeSlotsController < ApplicationController
     return if performed?
 
     if time_slot.destroy
-    redirect_to time_slots_path, notice: "予約枠を削除しました", status: :see_other
+      redirect_to time_slots_path, notice: "予約枠を削除しました", status: :see_other
     else
       redirect_to time_slots_path, alert: time_slot.errors.full_messages.first, status: :see_other
     end

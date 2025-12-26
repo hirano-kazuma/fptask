@@ -84,7 +84,7 @@ class TimeSlot < ApplicationRecord
     return if start_time.blank?
     return unless start_time.sunday?
 
-      errors.add(:start_time, "日曜日は休業日です")
+    errors.add(:start_time, "日曜日は休業日です")
   end
 
   # 同じFPの既存の枠と時間が重複していないかチェック

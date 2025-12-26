@@ -1,7 +1,8 @@
 module BookingsHelper
   # 予約ステータスのバッジを返す
+  # decoratorのdisplay_statusを使用して表示
   def booking_status_badge(booking)
-    case booking.status
+    case booking.display_status
     when "pending"
       content_tag(:span, "承認待ち", class: "badge bg-warning")
     when "confirmed"
@@ -37,17 +38,17 @@ module BookingsHelper
     return unless booking.status_pending?
 
     safe_join([
-      link_to("承認", confirm_booking_path(booking),
-              data: { turbo_method: :patch, turbo_confirm: "この予約を承認しますか？" },
+      link_to("承認", booking_confirm_path(booking),
+              data: { turbo_method: :post, turbo_confirm: "この予約を承認しますか？" },
               class: "btn btn-success"),
-      link_to("拒否", reject_booking_path(booking),
-              data: { turbo_method: :patch, turbo_confirm: "この予約を拒否しますか？" },
+      link_to("拒否", booking_reject_path(booking),
+              data: { turbo_method: :post, turbo_confirm: "この予約を拒否しますか？" },
               class: "btn btn-danger")
     ])
   end
 
   def general_user_action_buttons(booking)
-    return unless booking.status_cancellable?
+    return unless booking.display_cancellable?
 
     link_to("キャンセル", booking_path(booking),
             data: { turbo_method: :delete, turbo_confirm: "予約をキャンセルしますか？" },
