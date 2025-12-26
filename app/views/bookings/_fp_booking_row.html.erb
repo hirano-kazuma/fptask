@@ -1,0 +1,21 @@
+<tr>
+  <td>
+    <%= booking_time_range_str(booking) %>
+  </td>
+  <td><%= booking.user.name %></td>
+  <td><%= truncate(booking.description, length: 50) %></td>
+  <td>
+    <%= booking_status_badge(booking) %>
+  </td>
+  <td>
+    <%= link_to "詳細", booking_path(booking), class: "btn btn-sm btn-outline-primary" %>
+    <% if booking.status_pending? %>
+      <%= link_to "承認", booking_confirm_path(booking),
+          data: { turbo_method: :post, turbo_confirm: "この予約を承認しますか？" },
+          class: "btn btn-sm btn-success" %>
+      <%= link_to "拒否", booking_reject_path(booking),
+          data: { turbo_method: :post, turbo_confirm: "この予約を拒否しますか？" },
+          class: "btn btn-sm btn-danger" %>
+    <% end %>
+  </td>
+</tr>

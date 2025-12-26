@@ -18,11 +18,9 @@ class UsersController < ApplicationController
   end
 
   def edit
-    # @userはcorrect_userで設定済み
   end
 
   def update
-    # @userはcorrect_userで設定済み
     if @user.update(user_params)
       redirect_to @user, notice: "ユーザー情報が更新されました"
     else

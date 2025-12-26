@@ -35,6 +35,24 @@ RSpec.describe "TimeSlots", type: :request do
         # 一般ユーザーもindexアクションにアクセス可能（予約可能な枠一覧を表示するため）
         # ただし、current_user.time_slotsは空の配列を返す
         expect(response).to have_http_status(:success)
+        expect(response.body).to include("予約可能な枠一覧")
+      end
+
+      context "with fp_id parameter" do
+        # 固定の平日日付を使用（土曜日を回避）
+        let(:future_time) { Time.zone.parse("2025-12-29 10:00") }  # 月曜日（未来）
+        let!(:fp_time_slot) do
+          create(:time_slot, fp: fp_user, start_time: future_time, end_time: future_time + 30.minutes)
+        end
+        let!(:other_fp_time_slot) do
+          create(:time_slot, fp: other_fp, start_time: future_time, end_time: future_time + 30.minutes)
+        end
+
+        it "filters time slots by FP" do
+          get time_slots_path(fp_id: fp_user.id)
+          expect(response).to have_http_status(:success)
+          expect(response.body).to include(fp_user.name)
+        end
       end
     end
   end
@@ -294,6 +312,60 @@ RSpec.describe "TimeSlots", type: :request do
         expect(response).to redirect_to(time_slots_path)
         follow_redirect!
         expect(response.body).to include("予約枠を削除しました")
+      end
+
+      context "when there is a pending booking" do
+        let!(:general_user) { create(:user, :general) }
+        let!(:booking) { create(:booking, :pending, time_slot: time_slot, user: general_user) }
+
+        it "does not delete the time slot and displays error message" do
+          expect { subject }.not_to change(TimeSlot, :count)
+          expect(response).to redirect_to(time_slots_path)
+          follow_redirect!
+          expect(response.body).to include("承認済みまたは承認待ちの予約があるため削除できません")
+        end
+      end
+
+      context "when there is a confirmed booking" do
+        let!(:general_user) { create(:user, :general) }
+        let!(:booking) { create(:booking, :confirmed, time_slot: time_slot, user: general_user) }
+
+        it "does not delete the time slot and displays error message" do
+          expect { subject }.not_to change(TimeSlot, :count)
+          expect(response).to redirect_to(time_slots_path)
+          follow_redirect!
+          expect(response.body).to include("承認済みまたは承認待ちの予約があるため削除できません")
+        end
+      end
+
+      context "when there is a completed booking" do
+        let!(:general_user) { create(:user, :general) }
+        let!(:booking) { create(:booking, :completed, time_slot: time_slot, user: general_user) }
+
+        it "does not delete the time slot and displays error message" do
+          expect { subject }.not_to change(TimeSlot, :count)
+          expect(response).to redirect_to(time_slots_path)
+          follow_redirect!
+          expect(response.body).to include("承認済みまたは承認待ちの予約があるため削除できません")
+        end
+      end
+
+      context "when there is only a cancelled booking" do
+        let!(:general_user) { create(:user, :general) }
+        let!(:booking) { create(:booking, :cancelled, time_slot: time_slot, user: general_user) }
+
+        it "allows deletion" do
+          expect { subject }.to change(TimeSlot, :count).by(-1)
+        end
+      end
+
+      context "when there is only a rejected booking" do
+        let!(:general_user) { create(:user, :general) }
+        let!(:booking) { create(:booking, :rejected, time_slot: time_slot, user: general_user) }
+
+        it "allows deletion" do
+          expect { subject }.to change(TimeSlot, :count).by(-1)
+        end
       end
     end
 

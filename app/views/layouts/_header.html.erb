@@ -25,6 +25,24 @@
             <li class="nav-item">
               <%= link_to "予約枠一覧", time_slots_path, class: "nav-link" %>
             </li>
+            <li class="nav-item">
+              <%= link_to bookings_path, class: "nav-link position-relative" do %>
+                予約一覧
+                <% if pending_bookings_count > 0 %>
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    <%= pending_bookings_count %>
+                    <span class="visually-hidden">未承認の予約申請</span>
+                  </span>
+                <% end %>
+              <% end %>
+            </li>
+          <% else %>
+            <li class="nav-item">
+              <%= link_to "予約可能な枠", time_slots_path, class: "nav-link" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "予約一覧", bookings_path, class: "nav-link" %>
+            </li>
           <% end %>
           <li class="nav-item dropdown">
             <a href="#" id="account" class="nav-link dropdown-toggle">

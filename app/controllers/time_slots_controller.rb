@@ -7,10 +7,18 @@ class TimeSlotsController < ApplicationController
       set_existing_slots
       @time_slots = current_user.time_slots.order(:start_time)
     else
-      # 一般ユーザー用：予約可能な枠一覧を表示
-      # 現在はFP用の実装のみのため、空の配列を設定
+      # 一般ユーザー用：予約可能な枠一覧（未来の枠のみ）
+      @fps = User.where(role: :fp).order(:name)
+      selected_fp_id = params[:fp_id]&.to_i
+
+      @time_slots = TimeSlot.includes(:booking, :fp)
+                            .future
+                            .by_fp(selected_fp_id)
+                            .order(:start_time)
+
+      @selected_fp = @fps.find_by(id: selected_fp_id) if selected_fp_id
+      @available_slots = @time_slots.map(&:to_available_hash)
       @existing_slots = []
-      @time_slots = []
     end
   end
 

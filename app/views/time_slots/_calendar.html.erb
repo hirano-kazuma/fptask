@@ -1,9 +1,11 @@
 <% editing_time_slot = local_assigns[:editing_time_slot] %>
 <% view_mode = local_assigns[:view_mode] || false %>
+<% booking_mode = local_assigns[:booking_mode] || false %>
 <div id="calendar-container"
      data-existing-slots="<%= (existing_slots || []).to_json %>"
      data-editing-time-slot="<%= editing_time_slot ? editing_time_slot.to_calendar_json : 'null' %>"
-     data-view-mode="<%= view_mode ? 'true' : 'false' %>">
+     data-view-mode="<%= view_mode ? 'true' : 'false' %>"
+     data-booking-mode="<%= booking_mode ? 'true' : 'false' %>">
   <div class="row">
     <div class="col-md-5">
       <div class="card">

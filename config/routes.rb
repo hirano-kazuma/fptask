@@ -17,8 +17,16 @@ Rails.application.routes.draw do
   # セッション
   resource :session, only: %i[new create destroy]
 
-  # 予約枠（FP用）
+  # 予約枠（FP用・一般ユーザー用）
   resources :time_slots
+
+  # 予約（一般ユーザー用・FP用）
+  resources :bookings, only: %i[index show new create destroy] do
+    scope module: :bookings do
+      resource :confirm, only: %i[create]
+      resource :reject, only: %i[create]
+    end
+  end
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

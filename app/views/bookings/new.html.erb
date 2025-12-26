@@ -1,0 +1,23 @@
+<% provide(:title, "予約作成") %>
+<h1>予約作成</h1>
+
+<div class="mb-4">
+  <h3>予約する時間帯</h3>
+  <p>
+    <strong>FP:</strong> <%= @time_slot.fp.name %><br>
+    <strong>日時:</strong> <%= @time_slot.start_time.strftime("%Y年%m月%d日 %H:%M") %> - <%= @time_slot.end_time.strftime("%H:%M") %><br
+    </p>
+</div>
+
+<%= form_with(model: @booking, url: bookings_path(time_slot_id: @time_slot.id), local: true) do |f| %>
+  <%= render "shared/error_messages", object: @booking %>
+
+  <div class="mb-3">
+    <%= f.label :description, "予約内容", class: "form-label" %>
+    <%= f.text_area :description, class: "form-control", rows: 5, placeholder: "予約内容を入力してください" %>
+  </div>
+
+  <%= f.submit "予約する", class: "btn btn-primary" %>
+<% end %>
+
+<%= link_to "予約一覧に戻る", bookings_path, class: "btn btn-outline-secondary mt-3" %>

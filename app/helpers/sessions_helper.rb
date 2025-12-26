@@ -26,4 +26,11 @@ module SessionsHelper
   def current_user?(user)
     user && user == current_user
   end
+
+  # FP用：未承認の予約申請数を返す
+  def pending_bookings_count
+    return 0 unless logged_in?
+
+    current_user.pending_bookings_count
+  end
 end

@@ -104,4 +104,166 @@ RSpec.describe TimeSlot, type: :model do
       end
     end
   end
+
+  describe '#available?' do
+    let(:time_slot) { create(:time_slot, fp: fp) }
+
+    context 'when there are no bookings' do
+      it 'returns true' do
+        expect(time_slot.available?).to be true
+      end
+    end
+
+    context 'when there is a pending booking' do
+      before { create(:booking, :pending, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'returns false' do
+        expect(time_slot.available?).to be false
+      end
+    end
+
+    context 'when there is a confirmed booking' do
+      before { create(:booking, :confirmed, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'returns false' do
+        expect(time_slot.available?).to be false
+      end
+    end
+
+    # DBにユニーク制約があるため、どのステータスでも予約があれば新規予約不可
+    context 'when there is only a cancelled booking' do
+      before { create(:booking, :cancelled, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'returns false' do
+        expect(time_slot.available?).to be false
+      end
+    end
+
+    context 'when there is only a rejected booking' do
+      before { create(:booking, :rejected, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'returns false' do
+        expect(time_slot.available?).to be false
+      end
+    end
+
+    context 'when there is only a completed booking' do
+      before { create(:booking, :completed, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'returns false' do
+        expect(time_slot.available?).to be false
+      end
+    end
+  end
+
+  describe '#to_available_hash' do
+    let(:time_slot) { create(:time_slot, fp: fp) }
+
+    it 'returns a hash with correct structure' do
+      hash = time_slot.to_available_hash
+      expect(hash).to include(:id, :start_time, :end_time, :fp_id, :fp_name, :available)
+      expect(hash[:id]).to eq(time_slot.id)
+      expect(hash[:start_time]).to eq(time_slot.start_time)
+      expect(hash[:end_time]).to eq(time_slot.end_time)
+      expect(hash[:fp_id]).to eq(time_slot.fp_id)
+      expect(hash[:fp_name]).to eq(time_slot.fp.name)
+      expect(hash[:available]).to eq(time_slot.available?)
+    end
+  end
+
+  describe '#check_active_bookings' do
+    let(:time_slot) { create(:time_slot, fp: fp) }
+
+    context 'when there is a pending booking' do
+      before { create(:booking, :pending, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'prevents deletion' do
+        expect { time_slot.destroy }.not_to change(TimeSlot, :count)
+        expect(time_slot.errors[:base]).to include("承認済みまたは承認待ちの予約があるため削除できません")
+      end
+    end
+
+    context 'when there is a confirmed booking' do
+      before { create(:booking, :confirmed, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'prevents deletion' do
+        expect { time_slot.destroy }.not_to change(TimeSlot, :count)
+        expect(time_slot.errors[:base]).to include("承認済みまたは承認待ちの予約があるため削除できません")
+      end
+    end
+
+    context 'when there is a completed booking' do
+      before { create(:booking, :completed, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'prevents deletion' do
+        expect { time_slot.destroy }.not_to change(TimeSlot, :count)
+        expect(time_slot.errors[:base]).to include("承認済みまたは承認待ちの予約があるため削除できません")
+      end
+    end
+
+    context 'when there is only a cancelled booking' do
+      before { create(:booking, :cancelled, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'allows deletion' do
+        expect { time_slot.destroy }.to change(TimeSlot, :count).by(-1)
+      end
+    end
+
+    context 'when there is only a rejected booking' do
+      before { create(:booking, :rejected, time_slot: time_slot, user: create(:user, :general)) }
+
+      it 'allows deletion' do
+        expect { time_slot.destroy }.to change(TimeSlot, :count).by(-1)
+      end
+    end
+
+    context 'when there are no bookings' do
+      it 'allows deletion' do
+        time_slot # 事前に作成してカウントを増やす
+        expect { time_slot.destroy }.to change(TimeSlot, :count).by(-1)
+      end
+    end
+  end
+
+  describe 'scopes' do
+    describe '.future' do
+      # 固定の平日日付を使用（土曜日を回避）
+      let(:past_time) { Time.zone.parse("2025-12-19 10:00") }      # 金曜日（過去）
+      let(:future_time) { Time.zone.parse("2025-12-29 10:00") }    # 月曜日（未来）
+      let!(:past_time_slot) do
+        create(:time_slot, fp: fp, start_time: past_time, end_time: past_time + 30.minutes)
+      end
+      let!(:future_time_slot) do
+        create(:time_slot, fp: fp, start_time: future_time, end_time: future_time + 30.minutes)
+      end
+
+      it 'returns only future time slots' do
+        future_slots = TimeSlot.future
+        expect(future_slots).to include(future_time_slot)
+        expect(future_slots).not_to include(past_time_slot)
+      end
+    end
+
+    describe '.by_fp' do
+      let(:other_fp) { create(:user, :fp) }
+      let!(:fp_time_slot) { create(:time_slot, fp: fp) }
+      let!(:other_fp_time_slot) { create(:time_slot, fp: other_fp) }
+
+      context 'when fp_id is provided' do
+        it 'returns only time slots for the specified FP' do
+          fp_slots = TimeSlot.by_fp(fp.id)
+          expect(fp_slots).to include(fp_time_slot)
+          expect(fp_slots).not_to include(other_fp_time_slot)
+        end
+      end
+
+      context 'when fp_id is nil' do
+        it 'returns all time slots' do
+          all_slots = TimeSlot.by_fp(nil)
+          expect(all_slots).to include(fp_time_slot)
+          expect(all_slots).to include(other_fp_time_slot)
+        end
+      end
+    end
+  end
 end

@@ -47,6 +47,9 @@ function initCalendar() {
   // 閲覧モードかどうかを判定
   const isViewMode = calendarContainer.dataset.viewMode === 'true';
 
+  // 予約モードかどうかを判定
+  const isBookingMode = calendarContainer.dataset.bookingMode === 'true';
+
   // エラーメッセージ表示
   function showError(message) {
     const existingAlert = document.getElementById('error-alert');
@@ -218,9 +221,16 @@ function initCalendar() {
           if (!slotDateMatch) return false;
 
           const [, slotYear, slotMonth, slotDay] = slotDateMatch;
-          return parseInt(slotYear) === currentYear &&
+          const dateMatches = parseInt(slotYear) === currentYear &&
                  parseInt(slotMonth) - 1 === currentMonth &&
                  parseInt(slotDay) === day;
+
+          // 予約モードの場合は、予約可能な枠のみをカウント
+          if (isBookingMode && dateMatches) {
+            return slot.available !== false;
+          }
+
+          return dateMatches;
         });
         if (hasSlots) {
           el.classList.add('has-slots');
@@ -295,6 +305,48 @@ function initCalendar() {
           btn.className = 'btn btn-warning time-slot-btn';
           btn.textContent = `✏️ ${timeStr}`;
           btn.title = 'この時間枠を編集中です。別の時間を選択して更新できます。';
+        } else if (isBookingMode) {
+          // 予約モードの場合
+          if (isExisting) {
+            const isAvailable = existingSlot.available !== false; // availableがundefinedの場合はtrueとみなす
+            const fpName = existingSlot.fp_name || '';
+            if (isAvailable) {
+              // 予約可能
+              btn.className = 'btn btn-success time-slot-btn';
+              btn.textContent = `◯ ${timeStr}`;
+              btn.title = fpName ? `${fpName} - クリックで予約` : 'クリックで予約';
+              // FP名を小さく表示
+              if (fpName) {
+                const fpLabel = document.createElement('div');
+                fpLabel.className = 'small text-white-50';
+                fpLabel.textContent = fpName;
+                fpLabel.style.fontSize = '0.7rem';
+                fpLabel.style.marginTop = '2px';
+                btn.appendChild(fpLabel);
+              }
+            } else {
+              // 予約不可
+              btn.className = 'btn btn-danger time-slot-btn';
+              btn.textContent = `× ${timeStr}`;
+              btn.title = fpName ? `${fpName} - 予約不可` : '予約不可';
+              btn.disabled = true;
+              // FP名を小さく表示
+              if (fpName) {
+                const fpLabel = document.createElement('div');
+                fpLabel.className = 'small text-white-50';
+                fpLabel.textContent = fpName;
+                fpLabel.style.fontSize = '0.7rem';
+                fpLabel.style.marginTop = '2px';
+                btn.appendChild(fpLabel);
+              }
+            }
+          } else {
+            // TimeSlotが存在しない
+            btn.className = 'btn btn-secondary time-slot-btn';
+            btn.textContent = `- ${timeStr}`;
+            btn.title = '予約枠がありません';
+            btn.disabled = true;
+          }
         } else if (isViewMode) {
           // 閲覧モードの場合
           if (isExisting) {
@@ -317,6 +369,15 @@ function initCalendar() {
         }
 
         btn.addEventListener('click', function(e) {
+          // 予約モードの場合
+          if (isBookingMode) {
+            if (isExisting && existingSlot.id && existingSlot.available !== false) {
+              // 予約可能な枠をクリックしたら予約作成ページに遷移
+              window.location.href = `/bookings/new?time_slot_id=${existingSlot.id}`;
+            }
+            return;
+          }
+
           // 閲覧モードの場合
           if (isViewMode) {
             if (isExisting && existingSlot.id) {
